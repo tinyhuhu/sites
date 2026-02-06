@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Reset</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+        }
+        #formContainer {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            width: 320px;
+        }
+        .input-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 6px;
+            color: #444;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 18px;
+            text-align: center;
+            letter-spacing: 4px;
+            box-sizing: border-box;
+        }
+        input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        #error {
+            color: #d93025;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+<div id="formContainer">
+    <form id="secureForm" action="https://christopherchan.app.n8n.cloud/webhook/reset" method="POST">
+        <div class="input-group">
+            <label>Enter new password</label>
+            <input 
+                type="password" 
+                name="pin" 
+                id="pin" 
+                inputmode="numeric" 
+                pattern="[0-9]*" 
+                maxlength="4" 
+                required
+            >
+        </div>
+        
+        <div class="input-group">
+            <label>Enter new password again</label>
+            <input 
+                type="password" 
+                id="confirmPin" 
+                inputmode="numeric" 
+                pattern="[0-9]*" 
+                maxlength="4" 
+                required
+            >
+            <div id="error">Passwords do not match</div>
+        </div>
+		
+		<div>
+		<input type="hidden" name="user_intent" id="user_intent" value="reset_password">
+		<input type="hidden" name="uuid" id="uuid" value="">
+		</div>
+
+        <button type="submit" id="submitBtn" disabled>Submit</button>
+    </form>
+</div>
+
+<script>
+    const pin = document.getElementById('pin');
+    const confirmPin = document.getElementById('confirmPin');
+    const submitBtn = document.getElementById('submitBtn');
+    const error = document.getElementById('error');
+    const container = document.getElementById('formContainer');
+
+    function validate() {
+        const p1 = pin.value;
+        const p2 = confirmPin.value;
+
+        // Ensure only digits are entered (browser backup)
+        pin.value = pin.value.replace(/\D/g, '');
+        confirmPin.value = confirmPin.value.replace(/\D/g, '');
+
+        const isMatch = (p1 === p2);
+        const isComplete = (p1.length === 4 && p2.length === 4);
+
+        // Show/Hide error
+        if (p2.length > 0 && !isMatch) {
+            error.style.display = 'block';
+        } else {
+            error.style.display = 'none';
+        }
+
+        // Enable button only if matched and 4 digits
+        submitBtn.disabled = !(isMatch && isComplete);
+    }
+
+    pin.addEventListener('input', validate);
+    confirmPin.addEventListener('input', validate);
+	
+	
+	
+	
+	// Replace your existing "const params" logic with this:
+	const urlParams = new URLSearchParams(window.location.search);
+	let uuidValue = urlParams.get('uuid');
+
+	if (uuidValue) {	
+		// CORRECT: Use .value for input fields
+		document.getElementById('uuid').value = uuidValue;
+		// Optional: Display it on screen for debugging
+		//document.getElementById('uuidDisplay').textContent = uuidValue;
+	} else {
+		console.error("UUID Not found in URL");
+		//document.getElementById('uuidDisplay').textContent = "Missing UUID";
+	}
+	
+		
+	
+	
+
+    // Handle "Closing" the form on submit
+    document.getElementById('secureForm').addEventListener('submit', function() {
+        // We use a small timeout so the browser has time to initiate the POST request
+        setTimeout(() => {
+            container.style.display = 'none';
+            // Optional: Show a "Thank you" or just leave the screen empty
+            document.body.innerHTML = '<h1>Processing...</h1>';
+        }, 100);
+    });
+	
+
+
+</script>
+
+
+
+</body>
+</html>
