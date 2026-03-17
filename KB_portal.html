@@ -1,24 +1,22 @@
-<script type="text/javascript" charset="utf-8">
-  (function (g, e, n, es, ys) {
-    g['_genesysJs'] = e;
-    g[e] = g[e] || function () {
-      (g[e].q = g[e].q || []).push(arguments)
-    };
-    g[e].t = 1 * new Date();
-    g[e].c = es;
-    ys = document.createElement('script'); ys.async = 1; ys.src = n; ys.charset = 'utf-8'; document.head.appendChild(ys);
-  })(window, 'Genesys', 'https://apps.mypurecloud.com/genesys-bootstrap/genesys.min.js', {
-    environment: 'prod',
-    deploymentId: 'fc432fab-01ee-4822-95dd-6d905a680081'
-  });
-</script>
-
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>Knowledge Portal Test</title>
-    </head>
+    <script type="text/javascript" charset="utf-8">
+      (function (g, e, n, es, ys) {
+        g['_genesysJs'] = e;
+        g[e] = g[e] || function () {
+          (g[e].q = g[e].q || []).push(arguments)
+        };
+        g[e].t = 1 * new Date();
+        g[e].c = es;
+        ys = document.createElement('script'); ys.async = 1; ys.src = n; ys.charset = 'utf-8'; document.head.appendChild(ys);
+      })(window, 'Genesys', 'https://apps.mypurecloud.com/genesys-bootstrap/genesys.min.js', {
+        environment: 'use1', // Changed from 'prod' to the specific AWS region code
+        deploymentId: 'fc432fab-01ee-4822-95dd-6d905a680081'
+      });
+    </script>
+</head>
 <body>
     <div id="genesys-support-center"></div>
 </body>
