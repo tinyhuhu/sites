@@ -13,6 +13,26 @@
   });
 </script>
 
+<script>
+function handleMySubmit(event) {
+    // 1. Prevent the page from reloading immediately
+    event.preventDefault();
+
+    // 2. Record the event
+    Genesys("command", "Journey.record", {
+        eventName: "form_submitted",
+        customAttributes: {
+            formName: "CarInsuranceForm",
+            formId: "insurance_quote_form"
+        }
+    });
+
+    // 3. Wait 200ms to ensure the packet leaves the browser, then submit manually
+    setTimeout(() => {
+        event.target.submit(); 
+    }, 200);
+}
+</script>
 
 
 <!DOCTYPE html>
@@ -33,7 +53,7 @@
   <br><br>
 
   
-  <form id="insurance_quote_form" name="CarInsuranceForm" action="WebMessaging.html" method="POST">
+  <form id="insurance_quote_form" name="CarInsuranceForm" action="WebMessaging.html" method="POST" onsubmit="return handleMySubmit(event)">
     <h3>Car Insurance Quote</h3>
     
     <label for="car_model">Car Model:</label>
