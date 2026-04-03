@@ -28,11 +28,22 @@
   <input type="text" name="q2" placeholder="Search our site..." required>
   <button type="submit">Search</button>
   </form>
+
+  
   <br><br>
-  <form action="WebMessaging.html" method="POST">
-  <input type="text" name="name">
-    <button type="submit">Submit</button>
-  </form>
+
+  
+  <form id="insurance_quote_form" name="CarInsuranceForm" action="WebMessaging.html" method="POST">
+    <h3>Car Insurance Quote</h3>
+    
+    <label for="car_model">Car Model:</label>
+    <input type="text" id="car_model" name="car_model" required>
+
+    <label for="year">Year:</label>
+    <input type="number" id="year" name="year" required>
+
+    <button type="submit">Submit Quote</button>
+</form>
   
     </body>
 </html>
