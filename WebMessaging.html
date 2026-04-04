@@ -35,18 +35,13 @@ function handleMySubmit(event) {
 </script>
 
 <script>
-function checkAbandonment(input) {
-    
-        Genesys("command", "Journey.record", {
-            eventName: "form_abandoned",
-            customAttributes: {
-                formName: "auto_insurance_quote",
-                formId: "car_info_section",
-                last_field_touched: input.id
-            }
-        });
-    
-}
+Genesys("command", "Journey.record", {
+  eventName: "form_abandoned",
+  customAttributes: {
+    formName: "auto_insurance_quote",
+    formId: "car_info_section"
+  }
+});
 </script>
 
 
