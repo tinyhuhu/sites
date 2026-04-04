@@ -79,6 +79,48 @@ function checkAbandonment(input) {
 
     <button type="submit">Submit Quote</button>
 </form>
+
+  <hr>
+  <h3>1. 触发购物车图标 (Shopping Cart)</h3>
+    <button onclick="triggerAddToCart()">加入购物车 (product_added)</button>
+    <p>点击后，Live Now 应该出现蓝色的购物车图标 🛒</p>
+
+    <br>
+<hr>
+<br>
+<h3>2. 触发小货车图标 (Truck)</h3>
+    <button onclick="triggerOrderShipped()">确认发货 (order_shipped)</button>
+    <p>点击后，Live Now 应该出现小货车图标 🚚</p>
+
+    <script>
+        // 触发购物车事件
+        function triggerAddToCart() {
+            console.log("正在发送 product_added 事件...");
+            Genesys("command", "Journey.record", {
+                eventName: "product_added",
+                customAttributes: {
+                    product_id: "CAL-AI-2026",
+                    product_name: "Genesys AI Guide",
+                    price: 49.99,
+                    currency: "CAD"
+                }
+            });
+        }
+
+        // 触发发货事件
+        function triggerOrderShipped() {
+            console.log("正在发送 order_shipped 事件...");
+            Genesys("command", "Journey.record", {
+                eventName: "order_shipped",
+                customAttributes: {
+                    order_id: "ORD-998877",
+                    carrier: "Canada Post",
+                    tracking_number: "CA123456789"
+                }
+            });
+        }
+    </script>
+
   
     </body>
 </html>
