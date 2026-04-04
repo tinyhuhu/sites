@@ -41,9 +41,8 @@ function checkAbandonment(input) {
         Genesys("command", "Journey.record", {
             eventName: "form_abandoned",
             customAttributes: {
-                formName: "auto_insurance_quote",
-                // 这里的 input.id 会自动变成 "car_vin" 或 "driver_name" 等
-                last_field_touched: input.id 
+                formName: input.name,
+                //last_field_touched: input.name
             }
         });
     }
