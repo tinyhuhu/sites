@@ -36,7 +36,7 @@ function handleMySubmit(event) {
 
 <script>
 function checkAbandonment(input) {
-    if (input.value === "") {
+    
         Genesys("command", "Journey.record", {
             eventName: "form_abandoned",
             customAttributes: {
@@ -45,7 +45,7 @@ function checkAbandonment(input) {
                 last_field_touched: input.id
             }
         });
-    }
+    
 }
 </script>
 
