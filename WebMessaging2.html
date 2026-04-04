@@ -26,6 +26,19 @@
 </script>
 
 
+<script>
+    function triggerGpeEvent() {
+        Genesys("command", "Journey.record", {
+            eventName: "customer_lingering",
+            customAttributes: {
+                page_name: "manual_test_page",
+                stay_duration: "manual_click_12",
+                trigger_source: "button_click_34"
+            }
+        });
+    }
+</script>
+
 <!DOCTYPE html>
 <html>
 <head><title>Messaging Test222</title>
@@ -39,6 +52,14 @@
   <input type="text" name="q2" placeholder="Search our site..." required>
   <button type="submit">Search</button>
   </form>
+
+  <hr>
+  <button class="btn-trigger" onclick="triggerGpeEvent()">
+    Simulate Button Event
+</button>
+
+
+
   
     </body>
 </html>
