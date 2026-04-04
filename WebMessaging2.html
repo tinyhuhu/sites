@@ -13,6 +13,18 @@
   });
 </script>
 
+<script>
+  setTimeout(function() {
+   Genesys("command", "Journey.record", {
+      eventName: "customer_lingering",
+      customAttributes: { 
+         page_name: "checkout",
+         stay_duration: "20s" 
+      }
+   });
+}, 60000);
+</script>
+
 
 <!DOCTYPE html>
 <html>
