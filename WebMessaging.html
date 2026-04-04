@@ -36,13 +36,17 @@ function handleMySubmit(event) {
 
 <script>
 function checkAbandonment(input) {
-    Genesys("command", "Journey.record", {
-      eventName: "form_abandoned",
-      customAttributes: {
-      formName: "auto_insurance_quote",
-      formId: "car_info_section"
-  }
-});
+    // 如果用户离开这个框时，框里是空的
+    if (input.value === "") {
+        Genesys("command", "Journey.record", {
+            eventName: "form_abandoned",
+            customAttributes: {
+                formName: "auto_insurance_quote",
+                // 这里的 input.id 会自动变成 "car_vin" 或 "driver_name" 等
+                last_field_touched: input.id 
+            }
+        });
+    }
 }
 </script>
 
@@ -65,14 +69,14 @@ function checkAbandonment(input) {
   <br><br>
 
   
-  <form id="insurance_quote_form" name="CarInsuranceForm" action="WebMessaging.html" method="POST" onsubmit="return handleMySubmit(event)" onblur="checkAbandonment(this)">
+  <form id="insurance_quote_form" name="CarInsuranceForm" action="WebMessaging.html" method="POST" onsubmit="return handleMySubmit(event)">
     <h3>Car Insurance Quote</h3>
     
     <label for="car_model">Car Model:</label>
-    <input type="text" id="car_model" name="car_model" required>
+    <input type="text" id="car_model" name="car_model" required onblur="checkAbandonment(this)">
 
     <label for="year">Year:</label>
-    <input type="number" id="year" name="year" required>
+    <input type="number" id="year" name="year" required onblur="checkAbandonment(this)">
 
     <button type="submit">Submit Quote</button>
 </form>
