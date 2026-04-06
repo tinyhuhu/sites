@@ -1,12 +1,4 @@
 <script type="text/javascript" charset="utf-8">
-Genesys("init", { 
-  deploymentId: "a082ed02-e5b3-4aba-8261-563bf585d6ae", 
-  environment: "use1",
-  debug: true // 建议开启 debug，能看到更多加载失败的原因 
-});
-</script>
-
-<script type="text/javascript" charset="utf-8">
   (function (g, e, n, es, ys) {
     g['_genesysJs'] = e;
     g[e] = g[e] || function () {
@@ -19,6 +11,12 @@ Genesys("init", {
     environment: 'prod',
     deploymentId: 'a082ed02-e5b3-4aba-8261-563bf585d6ae'
   });
+  
+Genesys("init", { 
+  deploymentId: "a082ed02-e5b3-4aba-8261-563bf585d6ae", 
+  environment: "use1",
+  debug: true // 建议开启 debug，能看到更多加载失败的原因 
+});  
 </script>
 
 <script>
