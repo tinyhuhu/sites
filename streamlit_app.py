@@ -131,95 +131,61 @@ st.title("⚖️ 法律文书智能助手")
 tab1, tab2, tab3 = st.tabs(["💬 智能对话", "📝 自动摘要", "🔍 原文预览"])
 
 with tab1:
+    # 1. 确保初始化
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # 渲染历史记录（使用 write 配合 HTML）
+    # 2. 渲染历史对话 (回归纯文本)
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
-            st.write(message.get("content", ""), unsafe_allow_html=True)
+            st.markdown(message["content"])  # 直接使用 markdown 显示纯文本
             if "citations" in message and message["citations"]:
-                with st.expander("查看历史引用依据"):
+                with st.expander("查看参考依据"):
                     for idx, cit in enumerate(message["citations"]):
                         ref = cit["retrievedReferences"][0]
                         file_name = ref["location"]["s3Location"]["uri"].split("/")[-1]
                         st.info(f"[{idx+1}] {file_name}: {ref['content']['text']}")
 
+    # 3. 处理输入
     if prompt := st.chat_input("请问关于这些文档的问题..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
+        # 4. 获取 AI 回复
         with st.chat_message("assistant"):
-            with st.spinner("Claude 4.5 正在精准分析关键数据..."):
+            with st.spinner("正在检索文档..."):
                 try:
                     ctx = get_script_run_ctx()
                     session_id = ctx.session_id if ctx else "default_session"
                     
+                    # 获取原生结果
                     result = ask_bedrock_agent(prompt, session_id)
                     answer = result["answer"]
                     citations = result["citations"]
 
-                    # --- 精准高亮 + 加粗 + 自动引号处理 ---
-                    display_text = ""
-                    last_end = 0
+                    # --- 直接显示纯文本，不再进行任何加粗或 HTML 处理 ---
+                    st.markdown(answer)
 
-                    # 按照文本位置排序防止错位 [cite: 17]
-                    # 按照文本位置排序防止错位
-                    # 按照文本位置排序防止错位
-                    # 按照文本位置排序防止错位
-                    sorted_citations = sorted(citations, key=lambda x: x.get("generatedResponsePart", {}).get("textResponsePart", {}).get("span", {}).get("start", 0))
-
-                    for cit in sorted_citations:
-                        span = cit.get("generatedResponsePart", {}).get("textResponsePart", {}).get("span", {}) 
-                        start = span.get("start", 0)
-                        end = span.get("end", 0)
-                        
-                        # 安全锁：防止 Bedrock 返回的索引超出 answer 长度
-                        max_len = len(answer)
-                        start = min(start, max_len)
-                        end = min(end, max_len)
-                        
-                        # 1. 拼接引用前的普通文本
-                        display_text += answer[last_end:start]
-                        
-                        # 2. 提取 AI 标注的原始片段并清洗
-                        raw_cited_text = answer[start:end].strip()
-                        
-                        # --- 核心识别逻辑：逐词扫描 ---
-                        words = raw_cited_text.split()
-                        processed_parts = []
-                        
-                        for word in words:
-                            # 去掉两边的标点，保留核心字符
-                            clean_word = word.strip('.,;:"“”\'()')
-                            
-                            # 判定核心字段：包含下划线，或者是一个不带常见语法的长单词
-                            if "_" in clean_word or (len(clean_word) > 3 and clean_word.islower() and clean_word.isalnum()):
-                                # 只给这种核心词加粗
-                                processed_parts.append(f'<b>"{clean_word}"</b>')
-                            else:
-                                # 其他助词（如 from, to, the, cart）不加粗，保持原样
-                                processed_parts.append(word)
-                        
-                        display_text += " ".join(processed_parts)
-                        last_end = end
-
-                    # 3. 拼接最后剩余的文本
-                    display_text += answer[last_end:]
-
-                    # 渲染最终结果
-                    st.write(display_text, unsafe_allow_html=True)
-
+                    # 依然保留底部的原文参考，方便你核对具体字段
                     if citations:
                         st.markdown("---")
                         for idx, cit in enumerate(citations):
                             ref = cit["retrievedReferences"][0]
-                            st.caption(f"📍 引用 [{idx+1}]: {ref['location']['s3Location']['uri'].split('/')[-1]}")
+                            uri = ref["location"]["s3Location"]["uri"]
+                            text = ref["content"]["text"]
+                            with st.expander(f"依据 [{idx+1}]: {uri.split('/')[-1]}"):
+                                st.write(text)
 
-                    st.session_state.messages.append({"role": "assistant", "content": display_text, "citations": citations})
+                    # 存入历史记录
+                    st.session_state.messages.append({
+                        "role": "assistant", 
+                        "content": answer, 
+                        "citations": citations
+                    })
+                    
                 except Exception as e:
-                    st.error(f"处理失败: {str(e)}")
+                    st.error(f"分析出错: {str(e)}")
 
 with tab2:
     st.subheader("关键风险点分析")
