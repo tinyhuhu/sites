@@ -136,6 +136,10 @@ with tab1:
 
         with st.chat_message("assistant"):
             with st.spinner("Claude 4.5 正在深度分析并标注引用..."):
+                
+                ctx = get_script_run_ctx()
+                session_id = ctx.session_id if ctx else "default_session"
+                
                 result = ask_bedrock_agent(prompt, session_id)
                 answer = result["answer"]
                 citations = result["citations"]
