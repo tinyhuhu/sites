@@ -167,6 +167,7 @@ with tab1:
                     # 按照文本位置排序防止错位 [cite: 17]
                     # 按照文本位置排序防止错位
                     # 按照文本位置排序防止错位
+                    # 按照文本位置排序防止错位
                     sorted_citations = sorted(citations, key=lambda x: x.get("generatedResponsePart", {}).get("textResponsePart", {}).get("span", {}).get("start", 0))
 
                     for cit in sorted_citations:
@@ -174,7 +175,7 @@ with tab1:
                         start = span.get("start", 0)
                         end = span.get("end", 0)
                         
-                        # --- 安全锁：防止索引越界 ---
+                        # 安全锁：防止 Bedrock 返回的索引超出 answer 长度
                         max_len = len(answer)
                         start = min(start, max_len)
                         end = min(end, max_len)
@@ -182,27 +183,29 @@ with tab1:
                         # 1. 拼接引用前的普通文本
                         display_text += answer[last_end:start]
                         
-                        # 2. 提取 AI 标注的原始片段
+                        # 2. 提取 AI 标注的原始片段并清洗
                         raw_cited_text = answer[start:end].strip()
                         
-                        # --- 核心词提取逻辑 ---
-                        # 即使 AI 引用了一长串，我们也只加粗其中最像“事件名”的单词
+                        # --- 核心识别逻辑：逐词扫描 ---
                         words = raw_cited_text.split()
-                        processed_words = []
-                        for word in words:
-                            # 清理标点
-                            clean_word = word.strip('.,;:"“”\'')
-                            # 识别逻辑：包含下划线（如 product_added）或全是小写字母的长单词
-                            if "_" in clean_word or (len(clean_word) > 3 and clean_word.islower()):
-                                # 仅对这个核心词进行加粗
-                                processed_words.append(f'<b>"{clean_word}"</b>')
-                            else:
-                                processed_words.append(word)
+                        processed_parts = []
                         
-                        display_text += " ".join(processed_words)
+                        for word in words:
+                            # 去掉两边的标点，保留核心字符
+                            clean_word = word.strip('.,;:"“”\'()')
+                            
+                            # 判定核心字段：包含下划线，或者是一个不带常见语法的长单词
+                            if "_" in clean_word or (len(clean_word) > 3 and clean_word.islower() and clean_word.isalnum()):
+                                # 只给这种核心词加粗
+                                processed_parts.append(f'<b>"{clean_word}"</b>')
+                            else:
+                                # 其他助词（如 from, to, the, cart）不加粗，保持原样
+                                processed_parts.append(word)
+                        
+                        display_text += " ".join(processed_parts)
                         last_end = end
 
-                    # 拼接剩余部分，同样加入安全保护
+                    # 3. 拼接最后剩余的文本
                     display_text += answer[last_end:]
 
                     # 渲染最终结果
