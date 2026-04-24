@@ -129,48 +129,65 @@ st.title("⚖️ 法律文书智能助手")
 tab1, tab2, tab3 = st.tabs(["💬 智能对话", "📝 自动摘要", "🔍 原文预览"])
 
 with tab1:
-    # ... (之前的历史记录渲染逻辑保持不变)
+    # 1. 确保初始化
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-    if prompt := st.chat_input("请问关于这些文档的问题..."):
-        # ... (显示用户消息逻辑)
-
-        with st.chat_message("assistant"):
-            with st.spinner("Claude 4.5 正在深度分析并标注引用..."):
-                
-                ctx = get_script_run_ctx()
-                session_id = ctx.session_id if ctx else "default_session"
-                
-                result = ask_bedrock_agent(prompt, session_id)
-                answer = result["answer"]
-                citations = result["citations"]
-
-                # 1. 显示回答主体
-                st.markdown(answer)
-
-                # 2. 如果有引用，显示原文链接和高亮片段
-                if citations:
-                    st.markdown("---")
-                    st.subheader("📍 法律依据与原文参考")
-                    
-                    for idx, cit in enumerate(citations):
-                        # 提取引用片段和来源 S3 路径
+    # 2. 渲染历史对话
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+            # 如果这条消息有引用，也把它渲染出来
+            if "citations" in message and message["citations"]:
+                with st.expander("查看历史引用依据"):
+                    for idx, cit in enumerate(message["citations"]):
                         ref = cit["retrievedReferences"][0]
-                        source_uri = ref["location"]["s3Location"]["uri"]
-                        file_name = source_uri.split("/")[-1] # 获取文件名
-                        text_content = ref["content"]["text"] # 知识库中的原始文本
+                        file_name = ref["location"]["s3Location"]["uri"].split("/")[-1]
+                        st.info(f"[{idx+1}] {file_name}: {ref['content']['text']}")
 
-                        with st.expander(f"来源 [{idx+1}]: {file_name}"):
-                            # 实现 Highlight 效果：在原文中高亮显示
-                            st.info(f"“...{text_content}...”")
-                            # 提供 S3 链接（注意：用户需要有权限访问该 S3 链接或通过签名 URL 下载）
-                            st.markdown(f"🔗 [查看原始文档]({source_uri})")
+    # 3. 处理输入
+    if prompt := st.chat_input("请问关于这些文档的问题..."):
+        # 存入用户消息
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
 
-                # 存入 Session State
-                st.session_state.messages.append({
-                    "role": "assistant", 
-                    "content": answer, 
-                    "citations": citations # 把引用也存入状态
-                })
+        # 4. 获取 AI 回复
+        with st.chat_message("assistant"):
+            with st.spinner("Claude 4.5 正在分析..."):
+                try:
+                    # 获取 session_id
+                    ctx = get_script_run_ctx()
+                    session_id = ctx.session_id if ctx else "default_session"
+                    
+                    # 调用你的函数
+                    result = ask_bedrock_agent(prompt, session_id)
+                    answer = result["answer"]
+                    citations = result["citations"]
+
+                    # 显示回答
+                    st.markdown(answer)
+
+                    # 显示本次引用的高亮原文
+                    if citations:
+                        st.markdown("---")
+                        for idx, cit in enumerate(citations):
+                            ref = cit["retrievedReferences"][0]
+                            uri = ref["location"]["s3Location"]["uri"]
+                            text = ref["content"]["text"]
+                            with st.expander(f"来源 [{idx+1}]: {uri.split('/')[-1]}"):
+                                st.write(f"原文：{text}")
+
+                    # 关键修复：确保 append 动作安全
+                    if "messages" in st.session_state:
+                        st.session_state.messages.append({
+                            "role": "assistant", 
+                            "content": answer, 
+                            "citations": citations
+                        })
+                    
+                except Exception as e:
+                    st.error(f"分析出错: {str(e)}")
 
 with tab2:
     st.subheader("关键风险点分析")
