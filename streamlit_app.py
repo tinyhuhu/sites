@@ -82,37 +82,36 @@ with st.sidebar:
     # 案件分类
     case_type = st.selectbox("选择法律领域", ["民事合同", "刑事诉讼", "企业合规", "知识产权"])
     
-    # 文件上传
+   # 文件上传
     uploaded_files = st.file_uploader("上传法律文档 (PDF)", type=['pdf'], accept_multiple_files=True)
     
     if uploaded_files:
         st.success(f"已选中 {len(uploaded_files)} 个文档")
-        if st.button("开始分析/同步至 AWS"):
-            if st.button("🚀 开始同步至法律知识库"):
-                with st.status("正在处理文档...", expanded=True) as status:
-                    all_success = True
-                        
-                    # 1. 逐个上传到 S3
-                    for uploaded_file in uploaded_files:
-                        st.write(f"正在上传: {uploaded_file.name}...")
-                        success = upload_to_s3(
-                            uploaded_file, 
-                            st.secrets["AWS_S3_BUCKET_NAME"], 
-                            f"legal_docs/{uploaded_file.name}" # 存放在 legal_docs 文件夹下
-                        )
-                        if not success:
-                            all_success = False
+        
+        # 直接使用新的逻辑按钮，替换掉原来的 if st.button("开始分析/同步至 AWS"):
+        if st.button("🚀 开始同步至法律知识库"):
+            with st.status("正在处理文档...", expanded=True) as status:
+                all_success = True
+                
+                # 1. 逐个上传到 S3
+                for uploaded_file in uploaded_files:
+                    st.write(f"正在上传: {uploaded_file.name}...")
+                    success = upload_to_s3(
+                        uploaded_file, 
+                        st.secrets["AWS_S3_BUCKET_NAME"], 
+                        f"legal_docs/{uploaded_file.name}"
+                    )
+                    if not success:
+                        all_success = False
 
-                    # 2. 触发 Bedrock 同步
-                    if all_success:
-                        st.write("已完成 S3 上传，正在触发 Bedrock 向量化索引...")
-                        if start_ingestion_job():
-                            status.update(label="✅ 同步任务已启动！AI 正在学习新文档...", state="complete")
-                            st.toast("知识库正在后台更新，通常需要 1-2 分钟。")
-                        else:
-                            status.update(label="❌ 触发同步失败", state="error")
-
-
+                # 2. 触发 Bedrock 同步
+                if all_success:
+                    st.write("已完成 S3 上传，正在触发 Bedrock 向量化索引...")
+                    if start_ingestion_job():
+                        status.update(label="✅ 同步任务已启动！AI 正在学习新文档...", state="complete")
+                        st.toast("知识库正在后台更新，通常需要 1-2 分钟。")
+                    else:
+                        status.update(label="❌ 触发同步失败", state="error")
 
 
 # 3. 主界面设计
