@@ -166,34 +166,43 @@ with tab1:
 
                     # 按照文本位置排序防止错位 [cite: 17]
                     # 按照文本位置排序防止错位
+                    # 按照文本位置排序防止错位
                     sorted_citations = sorted(citations, key=lambda x: x.get("generatedResponsePart", {}).get("textResponsePart", {}).get("span", {}).get("start", 0))
 
                     for cit in sorted_citations:
                         span = cit.get("generatedResponsePart", {}).get("textResponsePart", {}).get("span", {}) 
-                        start, end = span.get("start", 0), span.get("end", 0)
+                        start = span.get("start", 0)
+                        end = span.get("end", 0)
+                        
+                        # --- 安全锁：防止索引越界 ---
+                        max_len = len(answer)
+                        start = min(start, max_len)
+                        end = min(end, max_len)
                         
                         # 1. 拼接引用前的普通文本
                         display_text += answer[last_end:start]
                         
-                        # 2. 提取 AI 标注的引用片段
+                        # 2. 提取 AI 标注的原始片段
                         raw_cited_text = answer[start:end].strip()
                         
                         # --- 核心词提取逻辑 ---
-                        # 我们把片段拆开，只给最像“字段名”的部分加粗
+                        # 即使 AI 引用了一长串，我们也只加粗其中最像“事件名”的单词
                         words = raw_cited_text.split()
                         processed_words = []
                         for word in words:
-                            # 清理掉单词两边的标点符号
+                            # 清理标点
                             clean_word = word.strip('.,;:"“”\'')
-                            # 识别逻辑：如果单词包含下划线，或者看起来像代码字段（不含空格且长度适中）
-                            if "_" in clean_word or (len(clean_word) > 2 and clean_word.islower()):
-                                processed_words.append(f"<b>\"{clean_word}\"</b>")
+                            # 识别逻辑：包含下划线（如 product_added）或全是小写字母的长单词
+                            if "_" in clean_word or (len(clean_word) > 3 and clean_word.islower()):
+                                # 仅对这个核心词进行加粗
+                                processed_words.append(f'<b>"{clean_word}"</b>')
                             else:
                                 processed_words.append(word)
                         
                         display_text += " ".join(processed_words)
                         last_end = end
 
+                    # 拼接剩余部分，同样加入安全保护
                     display_text += answer[last_end:]
 
                     # 渲染最终结果
