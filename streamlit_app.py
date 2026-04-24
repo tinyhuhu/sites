@@ -155,7 +155,7 @@ with tab1:
         with st.chat_message("assistant"):
             with st.spinner("Claude 4.5 正在深度分析并标注引用..."):
                 try:
-                    ctx = get_script_run_ctx() [cite: 217]
+                    ctx = get_script_run_ctx() 
                     session_id = ctx.session_id if ctx else "default_session"
                     
                     # 调用后端函数获取回答和引用 [cite: 203, 205]
