@@ -164,6 +164,7 @@ with tab1:
                     display_text = ""
                     last_end = 0
 
+                    # 按照文本位置排序防止错位 [cite: 17]
                     sorted_citations = sorted(citations, key=lambda x: x.get("generatedResponsePart", {}).get("textResponsePart", {}).get("span", {}).get("start", 0))
 
                     for cit in sorted_citations:
@@ -173,19 +174,21 @@ with tab1:
                         # 1. 拼接高亮前的普通文本 [cite: 19]
                         display_text += answer[last_end:start]
                         
-                        # 2. 核心逻辑改进：强制高亮并加引号 
+                        # 2. 核心逻辑：去掉背景色，仅保留加粗、颜色和引号
                         raw_cited_text = answer[start:end].strip()
-                        
-                        # 如果引用的内容包含引号，先去掉，由我们统一加
+                        # 清洗原始引号，防止嵌套 
                         clean_text = raw_cited_text.replace('"', '').replace('“', '').replace('”', '')
                         
-                        style = "font-weight: bold; color: black; background-color: #FFEB3B; padding: 0 2px; border-radius: 2px;"
-                        # 无论有没有空格，全部统一格式：引号 + Mark标签 
-                        display_text += f' " <mark style="{style}">{clean_text}</mark> " '
+                        # 设定样式：去掉 background-color，改用更醒目的字体颜色（如深蓝色或红色）
+                        # 这里推荐使用红色 (#FF4B4B) 或保持黑色但加粗
+                        style = "font-weight: bold; color: #FF4B4B;" 
+                        
+                        # 拼接：引号 + 样式标签 
+                        display_text += f' " <span style="{style}">{clean_text}</span> " '
                         
                         last_end = end
 
-                    display_text += answer[last_end:]
+                    display_text += answer[last_end:] 
 
                     # 使用 HTML 渲染最终文本 [cite: 23]
                     st.write(display_text, unsafe_allow_html=True)
