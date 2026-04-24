@@ -209,7 +209,7 @@ with tab1:
                         })
                     
                 except Exception as e:
-                    st.error(f"分析出错: {str(e)}") [cite: 224]
+                    st.error(f"分析出错: {str(e)}") 
 
 with tab2:
     st.subheader("关键风险点分析")
