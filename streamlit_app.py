@@ -82,7 +82,7 @@ with st.sidebar:
     # 案件分类
     case_type = st.selectbox("选择法律领域", ["民事合同", "刑事诉讼", "企业合规", "知识产权"])
     
-   # 文件上传
+    # 文件上传
     uploaded_files = st.file_uploader("上传法律文档 (PDF)", type=['pdf'], accept_multiple_files=True)
     
     if uploaded_files:
