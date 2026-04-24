@@ -171,24 +171,20 @@ with tab1:
                         span = cit.get("generatedResponsePart", {}).get("textResponsePart", {}).get("span", {}) 
                         start, end = span.get("start", 0), span.get("end", 0)
                         
-                        # 拼接高亮前的普通文本
+                        # 拼接高亮前的普通文本 [cite: 19]
                         display_text += answer[last_end:start]
                         cited_text = answer[start:end] 
                         
-                        # 【逻辑过滤】：判断是否为纯技术字段（不含空格）
-                        if " " not in cited_text.strip():
-                            # 1. 自动加上引号 2. 加粗 3. 亮黄色高亮
-                            style = "font-weight: bold; color: black; background-color: #FFEB3B; padding: 0 2px; border-radius: 2px;"
-                            display_text += f"\"<mark style='{style}'>{cited_text}</mark>\""
-                        else:
-                            # 描述性文字不加引号，不加高亮，保持原样或仅加粗
-                            display_text += cited_text
-                            
+                        # --- 改进的逻辑：移除空格限制，确保所有引用都加粗高亮 ---
+                        # 1. 自动加上引号 2. 加粗 3. 亮黄色高亮 [cite: 20, 21]
+                        style = "font-weight: bold; color: black; background-color: #FFEB3B; padding: 0 2px; border-radius: 2px;"
+                        display_text += f"\"<mark style='{style}'>{cited_text}</mark>\""
+                        
                         last_end = end
 
-                    display_text += answer[last_end:] 
+                    display_text += answer[last_end:] [cite: 22]
 
-                    # 使用 HTML 渲染最终文本 [cite: 21]
+                    # 使用 HTML 渲染最终文本 [cite: 23]
                     st.write(display_text, unsafe_allow_html=True)
 
                     if citations:
