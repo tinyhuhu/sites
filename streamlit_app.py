@@ -168,12 +168,12 @@ with tab1:
                     sorted_citations = sorted(citations, key=lambda x: x.get("generatedResponsePart", {}).get("textResponsePart", {}).get("span", {}).get("start", 0))
 
                     for cit in sorted_citations:
-                        span = cit.get("generatedResponsePart", {}).get("textResponsePart", {}).get("span", {}) [cite: 18]
-                        start, end = span.get("start", 0), span.get("end", 0) [cite: 18]
+                        span = cit.get("generatedResponsePart", {}).get("textResponsePart", {}).get("span", {}) 
+                        start, end = span.get("start", 0), span.get("end", 0)
                         
                         # 拼接高亮前的普通文本
                         display_text += answer[last_end:start]
-                        cited_text = answer[start:end] [cite: 19]
+                        cited_text = answer[start:end] 
                         
                         # 【逻辑过滤】：判断是否为纯技术字段（不含空格）
                         if " " not in cited_text.strip():
@@ -186,7 +186,7 @@ with tab1:
                             
                         last_end = end
 
-                    display_text += answer[last_end:] [cite: 21]
+                    display_text += answer[last_end:] 
 
                     # 使用 HTML 渲染最终文本 [cite: 21]
                     st.write(display_text, unsafe_allow_html=True)
