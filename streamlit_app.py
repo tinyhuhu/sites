@@ -182,7 +182,7 @@ with tab1:
                         
                         last_end = end
 
-                    display_text += answer[last_end:] [cite: 22]
+                    display_text += answer[last_end:] 
 
                     # 使用 HTML 渲染最终文本 [cite: 23]
                     st.write(display_text, unsafe_allow_html=True)
