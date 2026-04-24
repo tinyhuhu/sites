@@ -23,19 +23,21 @@ def ask_bedrock_agent(input_text, session_id):
         agentAliasId=st.secrets["BEDROCK_AGENT_ALIAS_ID"],
         sessionId=session_id,
         inputText=input_text,
-        enableTrace=True  # 开启 Trace 以获取更详细的上下文
+        enableTrace=True 
     )
     
     full_answer = ""
     all_citations = []
 
     for event in response.get("completion"):
-        # 获取文本内容
-        if "chunk" in event:
-            chunk = event["chunk"]
-            full_answer += chunk.get("bytes").decode()
+        # 1. 安全检查：确保 event 是字典且包含 chunk
+        chunk = event.get("chunk")
+        if chunk and "bytes" in chunk:
+            # 解码文本内容
+            text_part = chunk["bytes"].decode()
+            full_answer += text_part
             
-            # 关键：提取引用信息
+            # 2. 提取引用信息 (Citations)
             if "attribution" in chunk:
                 citations = chunk["attribution"].get("citations", [])
                 all_citations.extend(citations)
@@ -129,21 +131,27 @@ st.title("⚖️ 法律文书智能助手")
 tab1, tab2, tab3 = st.tabs(["💬 智能对话", "📝 自动摘要", "🔍 原文预览"])
 
 with tab1:
-    # ... (1 & 2 部分：渲染历史记录保持一致，注意也需开启 unsafe_allow_html=True)
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    # 渲染历史记录（使用 write 配合 HTML）
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
-            st.write(message["content"], unsafe_allow_html=True)
-            # ... (历史引用 expander 逻辑)
+            st.write(message.get("content", ""), unsafe_allow_html=True)
+            if "citations" in message and message["citations"]:
+                with st.expander("查看历史引用依据"):
+                    for idx, cit in enumerate(message["citations"]):
+                        ref = cit["retrievedReferences"][0]
+                        file_name = ref["location"]["s3Location"]["uri"].split("/")[-1]
+                        st.info(f"[{idx+1}] {file_name}: {ref['content']['text']}")
 
-    # 3. 处理输入
     if prompt := st.chat_input("请问关于这些文档的问题..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # 4. 获取 AI 回复
         with st.chat_message("assistant"):
-            with st.spinner("Claude 4.5 正在精准标注关键条款..."):
+            with st.spinner("Claude 4.5 正在精准分析关键数据..."):
                 try:
                     ctx = get_script_run_ctx()
                     session_id = ctx.session_id if ctx else "default_session"
@@ -152,61 +160,38 @@ with tab1:
                     answer = result["answer"]
                     citations = result["citations"]
 
-                    # --- 改进的高亮+加粗处理逻辑 ---
+                    # --- 精准高亮 + 加粗处理 ---
                     display_text = ""
                     last_end = 0
-                    
-                    # 按照引用在回答文本中的起始位置排序 [cite: 115]
-                    sorted_citations = sorted(
-                        citations, 
-                        key=lambda x: x.get("generatedResponsePart", {}).get("textResponsePart", {}).get("span", {}).get("start", 0)
-                    )
+                    # 按照文本位置排序防止错位
+                    sorted_citations = sorted(citations, key=lambda x: x.get("generatedResponsePart", {}).get("textResponsePart", {}).get("span", {}).get("start", 0))
 
                     for cit in sorted_citations:
-                        part = cit.get("generatedResponsePart", {}).get("textResponsePart", {})
-                        span = part.get("span", {})
+                        span = cit.get("generatedResponsePart", {}).get("textResponsePart", {}).get("span", {})
                         start, end = span.get("start", 0), span.get("end", 0)
                         
-                        # 拼接：普通文本 + (加粗 + 高亮) 引用内容
                         display_text += answer[last_end:start]
                         cited_text = answer[start:end]
                         
-                        # 使用 HTML 结合加粗和背景色
-                        highlight_style = (
-                            "background-color: #FFEB3B; " # 明黄色背景
-                            "color: black; "             # 黑色文字确保对比度
-                            "font-weight: bold; "       # 【关键】加粗字体
-                            "padding: 0 2px; "
-                            "border-radius: 2px;"
-                        )
-                        display_text += f"<mark style='{highlight_style}'>{cited_text}</mark>"
+                        # 仅对引用部分应用黄色高亮 + 加粗
+                        style = "background-color: #FFEB3B; font-weight: bold; color: black; padding: 0 2px; border-radius: 2px;"
+                        display_text += f"<mark style='{style}'>{cited_text}</mark>"
                         last_end = end
                     
-                    display_text += answer[last_end:] # 拼接剩余部分
-                    # --- 逻辑结束 ---
-
-                    # 渲染最终效果
+                    display_text += answer[last_end:]
+                    
+                    # 渲染
                     st.write(display_text, unsafe_allow_html=True)
 
-                    # 底部原文参考（保持原样）
                     if citations:
                         st.markdown("---")
                         for idx, cit in enumerate(citations):
                             ref = cit["retrievedReferences"][0]
-                            uri = ref["location"]["s3Location"]["uri"]
-                            text = ref["content"]["text"]
-                            with st.expander(f"依据 [{idx+1}]: {uri.split('/')[-1]}"):
-                                st.write(f"**原始文本：**\n{text}")
+                            st.caption(f"📍 引用 [{idx+1}]: {ref['location']['s3Location']['uri'].split('/')[-1]}")
 
-                    # 存入 session_state
-                    st.session_state.messages.append({
-                        "role": "assistant", 
-                        "content": display_text, 
-                        "citations": citations
-                    })
-                    
+                    st.session_state.messages.append({"role": "assistant", "content": display_text, "citations": citations})
                 except Exception as e:
-                    st.error(f"分析出错: {str(e)}")
+                    st.error(f"处理失败: {str(e)}")
 
 with tab2:
     st.subheader("关键风险点分析")
