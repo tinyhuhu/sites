@@ -136,8 +136,8 @@ with tab1:
     # 2. 渲染历史对话
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-            # 如果这条消息有引用，也把它渲染出来
+            # 渲染历史记录时也要允许 HTML 以保持高亮效果 
+            st.write(message["content"], unsafe_allow_html=True)
             if "citations" in message and message["citations"]:
                 with st.expander("查看历史引用依据"):
                     for idx, cit in enumerate(message["citations"]):
@@ -147,47 +147,69 @@ with tab1:
 
     # 3. 处理输入
     if prompt := st.chat_input("请问关于这些文档的问题..."):
-        # 存入用户消息
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
         # 4. 获取 AI 回复
         with st.chat_message("assistant"):
-            with st.spinner("Claude 4.5 正在分析..."):
+            with st.spinner("Claude 4.5 正在深度分析并标注引用..."):
                 try:
-                    # 获取 session_id
-                    ctx = get_script_run_ctx()
+                    ctx = get_script_run_ctx() [cite: 217]
                     session_id = ctx.session_id if ctx else "default_session"
                     
-                    # 调用你的函数
+                    # 调用后端函数获取回答和引用 [cite: 203, 205]
                     result = ask_bedrock_agent(prompt, session_id)
                     answer = result["answer"]
                     citations = result["citations"]
 
-                    # 显示回答
-                    st.markdown(answer)
+                    # --- 高亮处理逻辑开始 ---
+                    display_text = ""
+                    last_end = 0
+                    
+                    # 按照引用在文本中的位置排序，确保高亮顺序正确 [cite: 218]
+                    sorted_citations = sorted(
+                        citations, 
+                        key=lambda x: x.get("generatedResponsePart", {}).get("textResponsePart", {}).get("span", {}).get("start", 0)
+                    )
 
-                    # 显示本次引用的高亮原文
+                    for cit in sorted_citations:
+                        part = cit.get("generatedResponsePart", {}).get("textResponsePart", {})
+                        span = part.get("span", {})
+                        start, end = span.get("start", 0), span.get("end", 0)
+                        
+                        # 拼接未高亮部分 + 高亮部分 [cite: 219]
+                        display_text += answer[last_end:start]
+                        highlighted_val = answer[start:end]
+                        display_text += f"<mark style='background-color: #FFEB3B; color: black; padding: 0 2px; border-radius: 2px;'>{highlighted_val}</mark>"
+                        last_end = end
+                    
+                    display_text += answer[last_end:] # 拼接剩余部分
+                    # --- 高亮处理逻辑结束 ---
+
+                    # 显示带高亮的回答 
+                    st.write(display_text, unsafe_allow_html=True)
+
+                    # 显示底部原文引用详情 [cite: 220]
                     if citations:
                         st.markdown("---")
                         for idx, cit in enumerate(citations):
                             ref = cit["retrievedReferences"][0]
                             uri = ref["location"]["s3Location"]["uri"]
                             text = ref["content"]["text"]
-                            with st.expander(f"来源 [{idx+1}]: {uri.split('/')[-1]}"):
-                                st.write(f"原文：{text}")
+                            with st.expander(f"依据 [{idx+1}]: {uri.split('/')[-1]}"):
+                                st.write(f"**检索到的原文片段：**\n\n{text}")
 
-                    # 关键修复：确保 append 动作安全
+                    # 将处理后的 display_text 存入 session_state [cite: 223]
                     if "messages" in st.session_state:
                         st.session_state.messages.append({
                             "role": "assistant", 
-                            "content": answer, 
+                            "content": display_text, 
                             "citations": citations
                         })
                     
                 except Exception as e:
-                    st.error(f"分析出错: {str(e)}")
+                    st.error(f"分析出错: {str(e)}") [cite: 224]
 
 with tab2:
     st.subheader("关键风险点分析")
