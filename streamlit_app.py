@@ -179,7 +179,7 @@ with tab1:
                         # 如果引用的内容包含引号，先去掉，由我们统一加
                         clean_text = raw_cited_text.replace('"', '').replace('“', '').replace('”', '')
                         
-                        style = "font-weight: bold; color: black; background-color: #FFEB3B; padding: 0 2px; border-radius: 2px;"
+                        style = "font-weight: bold; color: black; padding: 0 2px; border-radius: 2px;"
                         # 无论有没有空格，全部统一格式：引号 + Mark标签 
                         display_text += f' " <mark style="{style}">{clean_text}</mark> " '
                         
