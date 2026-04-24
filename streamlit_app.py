@@ -121,32 +121,32 @@ st.title("⚖️ 法律文书智能助手")
 tab1, tab2, tab3 = st.tabs(["💬 智能对话", "📝 自动摘要", "🔍 原文预览"])
 
 with tab1:
-    # 模拟聊天界面
+    # 1. 初始化 Session State
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
+    # 2. 【核心修改】先处理用户的输入，但不在这里直接渲染 chat_message
+    if prompt := st.chat_input("请问关于这些文档的问题..."):
+        # 将用户消息存入历史
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        
+        # 立即调用接口获取回答
+        try:
+            session_id = st.runtime.scriptrunner.add_script_run_ctx().streamlit_script_run_ctx.session_id
+            answer = ask_bedrock_agent(prompt, session_id)
+            # 将 AI 回复存入历史
+            st.session_state.messages.append({"role": "assistant", "content": answer})
+        except Exception as e:
+            st.error(f"调用失败: {str(e)}")
+        
+        # 关键：手动触发 rerun，让代码从头运行，这样新消息就会进入下方的 for 循环渲染
+        st.rerun()
+
+    # 3. 统一渲染所有对话记录（此时新消息已经包含在里面了）
+    # 这部分代码会始终保持在输入框的“视觉上方”
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-
-    if prompt := st.chat_input("请问关于这些文档的问题..."):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-
-        with st.chat_message("assistant"):
-            with st.spinner("律师助手正在检索知识库..."):
-                try:
-                    # 使用 streamlit 的 session_id 确保对话上下文独立
-                    session_id = st.runtime.scriptrunner.add_script_run_ctx().streamlit_script_run_ctx.session_id
-                    
-                    # 调用上面定义的函数
-                    answer = ask_bedrock_agent(prompt, session_id)
-                    
-                    st.markdown(answer)
-                    st.session_state.messages.append({"role": "assistant", "content": answer})
-                except Exception as e:
-                    st.error(f"调用失败: {str(e)}")
 
 with tab2:
     st.subheader("关键风险点分析")
