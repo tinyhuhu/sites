@@ -35,6 +35,41 @@ def ask_bedrock_agent(input_text, session_id):
 
 
 
+def upload_to_s3(file_obj, bucket_name, s3_key):
+    """将 Streamlit 上传的文件流上传到 S3"""
+    s3_client = boto3.client(
+        "s3",
+        aws_access_key_id=st.secrets["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"],
+        region_name=st.secrets["AWS_DEFAULT_REGION"]
+    )
+    try:
+        s3_client.upload_fileobj(file_obj, bucket_name, s3_key)
+        return True
+    except Exception as e:
+        st.error(f"S3 上传失败: {e}")
+        return False
+
+def start_ingestion_job():
+    """触发 Bedrock 知识库同步任务"""
+    # 注意：同步任务使用 bedrock-agent 客户端
+    client = boto3.client(
+        "bedrock-agent", 
+        aws_access_key_id=st.secrets["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"],
+        region_name=st.secrets["AWS_DEFAULT_REGION"]
+    )
+    try:
+        client.start_ingestion_job(
+            knowledgeBaseId=st.secrets["BEDROCK_KNOWLEDGE_BASE_ID"],
+            dataSourceId=st.secrets["BEDROCK_DATA_SOURCE_ID"]
+        )
+        return True
+    except Exception as e:
+        st.error(f"同步任务启动失败: {e}")
+        return False
+
+
 
 # 1. 页面基本配置
 st.set_page_config(page_title="2律所 AI 知识助手", layout="wide")
@@ -53,12 +88,32 @@ with st.sidebar:
     if uploaded_files:
         st.success(f"已选中 {len(uploaded_files)} 个文档")
         if st.button("开始分析/同步至 AWS"):
-            with st.status("正在处理扫描件 (Textract OCR)..."):
-                # 这里对接你的 AWS Lambda / Textract 逻辑
-                time.sleep(2) 
-                st.write("正在提取条款并建立索引...")
-                time.sleep(1)
-            st.toast("知识库更新完毕！")
+            if st.button("🚀 开始同步至法律知识库"):
+                with st.status("正在处理文档...", expanded=True) as status:
+                    all_success = True
+                        
+                    # 1. 逐个上传到 S3
+                    for uploaded_file in uploaded_files:
+                        st.write(f"正在上传: {uploaded_file.name}...")
+                        success = upload_to_s3(
+                            uploaded_file, 
+                            st.secrets["AWS_S3_BUCKET_NAME"], 
+                            f"legal_docs/{uploaded_file.name}" # 存放在 legal_docs 文件夹下
+                        )
+                        if not success:
+                            all_success = False
+
+                    # 2. 触发 Bedrock 同步
+                    if all_success:
+                        st.write("已完成 S3 上传，正在触发 Bedrock 向量化索引...")
+                        if start_ingestion_job():
+                            status.update(label="✅ 同步任务已启动！AI 正在学习新文档...", state="complete")
+                            st.toast("知识库正在后台更新，通常需要 1-2 分钟。")
+                        else:
+                            status.update(label="❌ 触发同步失败", state="error")
+
+
+
 
 # 3. 主界面设计
 st.title("⚖️ 法律文书智能助手")
