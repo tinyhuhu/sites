@@ -165,32 +165,30 @@ with tab1:
                     last_end = 0
 
                     # 按照文本位置排序防止错位 [cite: 17]
+                    # 按照文本位置排序防止错位
                     sorted_citations = sorted(citations, key=lambda x: x.get("generatedResponsePart", {}).get("textResponsePart", {}).get("span", {}).get("start", 0))
 
                     for cit in sorted_citations:
                         span = cit.get("generatedResponsePart", {}).get("textResponsePart", {}).get("span", {}) 
                         start, end = span.get("start", 0), span.get("end", 0)
                         
-                        # 1. 拼接高亮前的普通文本 [cite: 19]
+                        # 1. 拼接引用前的普通文本
                         display_text += answer[last_end:start]
                         
-                        # 2. 核心逻辑：去掉背景色，仅保留加粗、颜色和引号
+                        # 2. 提取并清理引用文本
                         raw_cited_text = answer[start:end].strip()
-                        # 清洗原始引号，防止嵌套 
+                        # 清理掉 AI 可能自带的引号，避免出现 ""double quotes""
                         clean_text = raw_cited_text.replace('"', '').replace('“', '').replace('”', '')
                         
-                        # 设定样式：去掉 background-color，改用更醒目的字体颜色（如深蓝色或红色）
-                        # 这里推荐使用红色 (#FF4B4B) 或保持黑色但加粗
-                        style = "font-weight: bold; color: #ADDFFF;" 
-                        
-                        # 拼接：引号 + 样式标签 
-                        display_text += f' " <span style="{style}">{clean_text}</span> " '
+                        # 3. 仅应用：引号 + 加粗
+                        # 使用 <b> 标签实现加粗，既简单又兼容性好
+                        display_text += f' "<b>{clean_text}</b>" '
                         
                         last_end = end
 
-                    display_text += answer[last_end:] 
+                    display_text += answer[last_end:]
 
-                    # 使用 HTML 渲染最终文本 [cite: 23]
+                    # 使用 HTML 渲染最终文本
                     st.write(display_text, unsafe_allow_html=True)
 
                     if citations:
