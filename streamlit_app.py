@@ -174,7 +174,7 @@ with tab1:
                         cited_text = answer[start:end]
                         
                         # 仅对引用部分应用黄色高亮 + 加粗
-                        style = "background-color: #736154; font-weight: bold; color: black; padding: 0 2px; border-radius: 2px;"
+                        style = " font-weight: bold; color: black; padding: 0 2px; border-radius: 2px;"
                         display_text += f"<mark style='{style}'>{cited_text}</mark>"
                         last_end = end
                     
