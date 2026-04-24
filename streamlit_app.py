@@ -121,32 +121,37 @@ st.title("⚖️ 法律文书智能助手")
 tab1, tab2, tab3 = st.tabs(["💬 智能对话", "📝 自动摘要", "🔍 原文预览"])
 
 with tab1:
-    # 1. 初始化 Session State
+    # 1. 初始化 Session State [cite: 11]
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # 2. 【核心修改】先处理用户的输入，但不在这里直接渲染 chat_message
-    if prompt := st.chat_input("请问关于这些文档的问题..."):
-        # 将用户消息存入历史
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        
-        # 立即调用接口获取回答
-        try:
-            session_id = st.runtime.scriptrunner.add_script_run_ctx().streamlit_script_run_ctx.session_id
-            answer = ask_bedrock_agent(prompt, session_id)
-            # 将 AI 回复存入历史
-            st.session_state.messages.append({"role": "assistant", "content": answer})
-        except Exception as e:
-            st.error(f"调用失败: {str(e)}")
-        
-        # 关键：手动触发 rerun，让代码从头运行，这样新消息就会进入下方的 for 循环渲染
-        st.rerun()
-
-    # 3. 统一渲染所有对话记录（此时新消息已经包含在里面了）
-    # 这部分代码会始终保持在输入框的“视觉上方”
+    # 2. 先渲染所有的历史记录（确保它们出现在页面上方）
+    # 这部分代码每次脚本运行都会执行 [cite: 11]
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
+
+    # 3. 处理用户输入逻辑
+    # 注意：st.chat_input 只要被调用，Streamlit 默认会将其锚定在屏幕底部
+    if prompt := st.chat_input("请问关于这些文档的问题..."):
+        # 立即在界面上显示用户刚刚输入的内容
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        # 4. 显示 AI 的查询状态和回复 
+        with st.chat_message("assistant"):
+            with st.spinner("律师助手正在检索知识库..."): # 重新找回这个状态 
+                try:
+                    # 获取 Session ID 并调用 Bedrock [cite: 12, 13]
+                    session_id = st.runtime.scriptrunner.add_script_run_ctx().streamlit_script_run_ctx.session_id
+                    answer = ask_bedrock_agent(prompt, session_id) [cite: 13]
+                    
+                    # 显示结果并存入历史 [cite: 13]
+                    st.markdown(answer)
+                    st.session_state.messages.append({"role": "assistant", "content": answer})
+                except Exception as e:
+                    st.error(f"调用失败: {str(e)}") [cite: 14]
 
 with tab2:
     st.subheader("关键风险点分析")
