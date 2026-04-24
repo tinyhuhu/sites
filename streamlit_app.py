@@ -175,20 +175,28 @@ with tab1:
                         # 1. 拼接引用前的普通文本
                         display_text += answer[last_end:start]
                         
-                        # 2. 提取并清理引用文本
+                        # 2. 提取 AI 标注的引用片段
                         raw_cited_text = answer[start:end].strip()
-                        # 清理掉 AI 可能自带的引号，避免出现 ""double quotes""
-                        clean_text = raw_cited_text.replace('"', '').replace('“', '').replace('”', '')
                         
-                        # 3. 仅应用：引号 + 加粗
-                        # 使用 <b> 标签实现加粗，既简单又兼容性好
-                        display_text += f' "<b>{clean_text}</b>" '
+                        # --- 核心词提取逻辑 ---
+                        # 我们把片段拆开，只给最像“字段名”的部分加粗
+                        words = raw_cited_text.split()
+                        processed_words = []
+                        for word in words:
+                            # 清理掉单词两边的标点符号
+                            clean_word = word.strip('.,;:"“”\'')
+                            # 识别逻辑：如果单词包含下划线，或者看起来像代码字段（不含空格且长度适中）
+                            if "_" in clean_word or (len(clean_word) > 2 and clean_word.islower()):
+                                processed_words.append(f"<b>\"{clean_word}\"</b>")
+                            else:
+                                processed_words.append(word)
                         
+                        display_text += " ".join(processed_words)
                         last_end = end
 
                     display_text += answer[last_end:]
 
-                    # 使用 HTML 渲染最终文本
+                    # 渲染最终结果
                     st.write(display_text, unsafe_allow_html=True)
 
                     if citations:
