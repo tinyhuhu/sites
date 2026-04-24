@@ -151,13 +151,13 @@ with tab1:
                     ctx = get_script_run_ctx()
                     # 如果获取成功则使用真实 ID，否则给一个默认值（防止报错）
                     session_id = ctx.session_id if ctx else "default_session"
-                    answer = ask_bedrock_agent(prompt, session_id) [cite: 13]
+                    answer = ask_bedrock_agent(prompt, session_id) 
                     
                     # 显示结果并存入历史 [cite: 13]
                     st.markdown(answer)
                     st.session_state.messages.append({"role": "assistant", "content": answer})
                 except Exception as e:
-                    st.error(f"调用失败: {str(e)}") [cite: 14]
+                    st.error(f"调用失败: {str(e)}") 
 
 with tab2:
     st.subheader("关键风险点分析")
