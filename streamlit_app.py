@@ -181,7 +181,7 @@ with tab1:
                         
                         # 设定样式：去掉 background-color，改用更醒目的字体颜色（如深蓝色或红色）
                         # 这里推荐使用红色 (#FF4B4B) 或保持黑色但加粗
-                        style = "font-weight: bold; color: #FF4B4B;" 
+                        style = "font-weight: bold; color: #ADDFFF;" 
                         
                         # 拼接：引号 + 样式标签 
                         display_text += f' " <span style="{style}">{clean_text}</span> " '
