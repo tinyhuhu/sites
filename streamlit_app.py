@@ -3,6 +3,7 @@ import time
 
 import boto3
 import streamlit as st
+from streamlit.runtime.scriptrunner import get_script_run_ctx
 
 def get_bedrock_runtime():
     # 自动从 st.secrets 读取 AWS_ACCESS_KEY_ID 和 AWS_SECRET_ACCESS_KEY
@@ -144,7 +145,12 @@ with tab1:
             with st.spinner("律师助手正在检索知识库..."): # 重新找回这个状态 
                 try:
                     # 获取 Session ID 并调用 Bedrock [cite: 12, 13]
-                    session_id = st.runtime.scriptrunner.add_script_run_ctx().streamlit_script_run_ctx.session_id
+                    # session_id = st.runtime.scriptrunner.add_script_run_ctx().streamlit_script_run_ctx.session_id
+
+                    # 获取上下文
+                    ctx = get_script_run_ctx()
+                    # 如果获取成功则使用真实 ID，否则给一个默认值（防止报错）
+                    session_id = ctx.session_id if ctx else "default_session"
                     answer = ask_bedrock_agent(prompt, session_id) [cite: 13]
                     
                     # 显示结果并存入历史 [cite: 13]
