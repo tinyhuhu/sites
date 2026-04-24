@@ -18,22 +18,29 @@ def get_bedrock_runtime():
 def ask_bedrock_agent(input_text, session_id):
     client = get_bedrock_runtime()
     
-    # 这里的参数需要根据你在 AWS 控制台创建的 Agent 信息填写
     response = client.invoke_agent(
         agentId=st.secrets["BEDROCK_AGENT_ID"],
         agentAliasId=st.secrets["BEDROCK_AGENT_ALIAS_ID"],
         sessionId=session_id,
         inputText=input_text,
+        enableTrace=True  # 开启 Trace 以获取更详细的上下文
     )
     
-    # 解析返回的流式响应
-    completion = ""
-    for event in response.get("completion"):
-        chunk = event.get("chunk")
-        if chunk:
-            completion += chunk.get("bytes").decode()
-    return completion
+    full_answer = ""
+    all_citations = []
 
+    for event in response.get("completion"):
+        # 获取文本内容
+        if "chunk" in event:
+            chunk = event["chunk"]
+            full_answer += chunk.get("bytes").decode()
+            
+            # 关键：提取引用信息
+            if "attribution" in chunk:
+                citations = chunk["attribution"].get("citations", [])
+                all_citations.extend(citations)
+                
+    return {"answer": full_answer, "citations": all_citations}
 
 
 def upload_to_s3(file_obj, bucket_name, s3_key):
@@ -122,42 +129,44 @@ st.title("⚖️ 法律文书智能助手")
 tab1, tab2, tab3 = st.tabs(["💬 智能对话", "📝 自动摘要", "🔍 原文预览"])
 
 with tab1:
-    # 1. 初始化 Session State [cite: 11]
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+    # ... (之前的历史记录渲染逻辑保持不变)
 
-    # 2. 先渲染所有的历史记录（确保它们出现在页面上方）
-    # 这部分代码每次脚本运行都会执行 [cite: 11]
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-    # 3. 处理用户输入逻辑
-    # 注意：st.chat_input 只要被调用，Streamlit 默认会将其锚定在屏幕底部
     if prompt := st.chat_input("请问关于这些文档的问题..."):
-        # 立即在界面上显示用户刚刚输入的内容
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+        # ... (显示用户消息逻辑)
 
-        # 4. 显示 AI 的查询状态和回复 
         with st.chat_message("assistant"):
-            with st.spinner("律师助手正在检索知识库..."): # 重新找回这个状态 
-                try:
-                    # 获取 Session ID 并调用 Bedrock [cite: 12, 13]
-                    # session_id = st.runtime.scriptrunner.add_script_run_ctx().streamlit_script_run_ctx.session_id
+            with st.spinner("Claude 4.5 正在深度分析并标注引用..."):
+                result = ask_bedrock_agent(prompt, session_id)
+                answer = result["answer"]
+                citations = result["citations"]
 
-                    # 获取上下文
-                    ctx = get_script_run_ctx()
-                    # 如果获取成功则使用真实 ID，否则给一个默认值（防止报错）
-                    session_id = ctx.session_id if ctx else "default_session"
-                    answer = ask_bedrock_agent(prompt, session_id) 
+                # 1. 显示回答主体
+                st.markdown(answer)
+
+                # 2. 如果有引用，显示原文链接和高亮片段
+                if citations:
+                    st.markdown("---")
+                    st.subheader("📍 法律依据与原文参考")
                     
-                    # 显示结果并存入历史 [cite: 13]
-                    st.markdown(answer)
-                    st.session_state.messages.append({"role": "assistant", "content": answer})
-                except Exception as e:
-                    st.error(f"调用失败: {str(e)}") 
+                    for idx, cit in enumerate(citations):
+                        # 提取引用片段和来源 S3 路径
+                        ref = cit["retrievedReferences"][0]
+                        source_uri = ref["location"]["s3Location"]["uri"]
+                        file_name = source_uri.split("/")[-1] # 获取文件名
+                        text_content = ref["content"]["text"] # 知识库中的原始文本
+
+                        with st.expander(f"来源 [{idx+1}]: {file_name}"):
+                            # 实现 Highlight 效果：在原文中高亮显示
+                            st.info(f"“...{text_content}...”")
+                            # 提供 S3 链接（注意：用户需要有权限访问该 S3 链接或通过签名 URL 下载）
+                            st.markdown(f"🔗 [查看原始文档]({source_uri})")
+
+                # 存入 Session State
+                st.session_state.messages.append({
+                    "role": "assistant", 
+                    "content": answer, 
+                    "citations": citations # 把引用也存入状态
+                })
 
 with tab2:
     st.subheader("关键风险点分析")
