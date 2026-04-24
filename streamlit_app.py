@@ -1,8 +1,43 @@
 import streamlit as st
 import time
 
+import boto3
+import streamlit as st
+
+def get_bedrock_runtime():
+    # 自动从 st.secrets 读取 AWS_ACCESS_KEY_ID 和 AWS_SECRET_ACCESS_KEY
+    session = boto3.Session(
+        aws_access_key_id=st.secrets["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"],
+        region_name=st.secrets["AWS_DEFAULT_REGION"]
+    )
+    return session.client("bedrock-agent-runtime")
+
+
+def ask_bedrock_agent(input_text, session_id):
+    client = get_bedrock_runtime()
+    
+    # 这里的参数需要根据你在 AWS 控制台创建的 Agent 信息填写
+    response = client.invoke_agent(
+        agentId=st.secrets["BEDROCK_AGENT_ID"],
+        agentAliasId=st.secrets["BEDROCK_AGENT_ALIAS_ID"],
+        sessionId=session_id,
+        inputText=input_text,
+    )
+    
+    # 解析返回的流式响应
+    completion = ""
+    for event in response.get("completion"):
+        chunk = event.get("chunk")
+        if chunk:
+            completion += chunk.get("bytes").decode()
+    return completion
+
+
+
+
 # 1. 页面基本配置
-st.set_page_config(page_title="律所 AI 知识助手", layout="wide")
+st.set_page_config(page_title="2律所 AI 知识助手", layout="wide")
 
 # 2. 侧边栏设计
 with st.sidebar:
@@ -46,10 +81,18 @@ with tab1:
             st.markdown(prompt)
 
         with st.chat_message("assistant"):
-            # 这里对接 AWS Bedrock Agent
-            response = "根据《合同法》第三条及上传的附件... (此处为 AI 返回内容)"
-            st.markdown(response)
-            st.session_state.messages.append({"role": "assistant", "content": response})
+            with st.spinner("律师助手正在检索知识库..."):
+                try:
+                    # 使用 streamlit 的 session_id 确保对话上下文独立
+                    session_id = st.runtime.scriptrunner.add_script_run_ctx().streamlit_script_run_ctx.session_id
+                    
+                    # 调用上面定义的函数
+                    answer = ask_bedrock_agent(prompt, session_id)
+                    
+                    st.markdown(answer)
+                    st.session_state.messages.append({"role": "assistant", "content": answer})
+                except Exception as e:
+                    st.error(f"调用失败: {str(e)}")
 
 with tab2:
     st.subheader("关键风险点分析")
