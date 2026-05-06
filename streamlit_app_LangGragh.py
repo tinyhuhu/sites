@@ -6,7 +6,7 @@ import uuid
 # --- 1. 配置区 ---
 # 请在你的 .streamlit/secrets.toml 中配置以下信息，或者直接在此处替换
 # 建议将 URL 放入 secrets 中以增强安全性
-LAMBDA_URL = st.secrets.get("LAMBDA_URL", "https://xxxxxx.lambda-url.us-east-1.on.aws/")
+LAMBDA_URL = st.secrets.get("LAMBDA_URL", "https://bw27k2swbdwbu3kqmphitxok3i0ofhoa.lambda-url.us-east-2.on.aws/")
 
 st.set_page_config(page_title="LangGraph Agent 助手", page_icon="🤖")
 
