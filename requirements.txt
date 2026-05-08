@@ -1,2 +1,5 @@
 streamlit
 boto3
+folium
+streamlit-folium
+geopy
