@@ -15,7 +15,7 @@ MAP_ENGINES = {
     "Google Hybrid": "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
 }
 
-st.title("🗺️ Multi-engine Map Locator")
+st.title("🗺️ Multi-engine Map Locator - Allison & Bryan")
 
 # 2. 侧边栏配置
 with st.sidebar:
