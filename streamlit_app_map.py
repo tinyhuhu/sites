@@ -15,18 +15,18 @@ MAP_ENGINES = {
     "Google Hybrid": "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
 }
 
-st.title("🗺️ 多引擎地图切换器")
+st.title("🗺️ Multi-engine Map Locator")
 
 # 2. 侧边栏配置
 with st.sidebar:
-    st.header("配置选项")
+    st.header("Options")
     # 下拉框选择引擎
-    selected_engine = st.selectbox("选择地图引擎:", list(MAP_ENGINES.keys()))
+    selected_engine = st.selectbox("Select Map Engine:", list(MAP_ENGINES.keys()))
     
     # 搜索框
-    user_input = st.text_input("输入 Calgary 邮编或地址:", value="Landmarks Marketmall")
+    user_input = st.text_input("Enter address or postal-code:", value="Landmarks Marketmall")
     
-    st.info("提示：Google 引擎使用的是其公共瓦片服务，无需 API Key 即可快速预览。")
+    #st.info("提示：Google 引擎使用的是其公共瓦片服务，无需 API Key 即可快速预览。")
 
 # 3. 逻辑处理
 geolocator = ArcGIS()
