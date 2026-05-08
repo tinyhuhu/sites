@@ -56,7 +56,8 @@ try:
         ).add_to(m)
 
         # 展示地图
-        st_folium(m, width="100%", height=600, key=f"map_{selected_engine}_{location.latitude}")
+        #st_folium(m, width="100%", height=600, key=f"map_{selected_engine}_{location.latitude}")
+        st_folium(m, width="100%", height=600, key="main_map")
         
         st.write(f"**当前位置:** {location.address}")
     else:
