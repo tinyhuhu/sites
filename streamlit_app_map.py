@@ -50,18 +50,18 @@ try:
             attr=attr
         )
         
-        #folium.Marker(
-        #    [location.latitude, location.longitude],
-        #    popup=location.address
-        #).add_to(m)
-
-        folium.CircleMarker(
-            location=[location.latitude, location.longitude],
-            radius=10,
-            color='red',
-            fill=True,
-            fill_color='red'
+        folium.Marker(
+            [location.latitude, location.longitude],
+            popup=location.address
         ).add_to(m)
+
+        #folium.CircleMarker(
+        #    location=[location.latitude, location.longitude],
+        #    radius=10,
+        #    color='red',
+        #    fill=True,
+        #    fill_color='red'
+        #).add_to(m)
 
         # 展示地图
         #st_folium(m, width="100%", height=600, key=f"map_{selected_engine}_{location.latitude}")
