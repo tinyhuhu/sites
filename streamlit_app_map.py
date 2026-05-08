@@ -56,7 +56,7 @@ try:
         #).add_to(m)
 
         folium.CircleMarker(
-            location=[lat, lon],
+            location=[location.latitude, location.longitude],
             radius=10,
             color='red',
             fill=True,
