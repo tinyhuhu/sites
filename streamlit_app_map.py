@@ -1,7 +1,7 @@
 import streamlit as st
 import folium
 from streamlit_folium import st_folium
-from geopy.geocoders import Nominatim
+from geopy.geocoders import ArcGIS
 
 st.set_page_config(page_title="Multi-Engine Map", layout="wide")
 
@@ -13,7 +13,6 @@ MAP_ENGINES = {
     "Google Satellite": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
     "Google Terrain": "https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}",
     "Google Hybrid": "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
-    "Stamen Terrain": "Stamen Terrain"
 }
 
 st.title("🗺️ 多引擎地图切换器")
@@ -30,7 +29,7 @@ with st.sidebar:
     st.info("提示：Google 引擎使用的是其公共瓦片服务，无需 API Key 即可快速预览。")
 
 # 3. 逻辑处理
-geolocator = Nominatim(user_agent="calgary_app_v2")
+geolocator = ArcGIS()
 query = f"{user_input}, Calgary, AB, Canada" if "Calgary" not in user_input else user_input
 
 try:
