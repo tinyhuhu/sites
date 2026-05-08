@@ -24,7 +24,7 @@ with st.sidebar:
     selected_engine = st.selectbox("选择地图引擎:", list(MAP_ENGINES.keys()))
     
     # 搜索框
-    user_input = st.text_input("输入 Calgary 邮编或地址:", value="T3H 1W8")
+    user_input = st.text_input("输入 Calgary 邮编或地址:", value="Landmarks Marketmall")
     
     st.info("提示：Google 引擎使用的是其公共瓦片服务，无需 API Key 即可快速预览。")
 
