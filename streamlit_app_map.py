@@ -50,9 +50,17 @@ try:
             attr=attr
         )
         
-        folium.Marker(
-            [location.latitude, location.longitude],
-            popup=location.address
+        #folium.Marker(
+        #    [location.latitude, location.longitude],
+        #    popup=location.address
+        #).add_to(m)
+
+        folium.CircleMarker(
+            location=[lat, lon],
+            radius=10,
+            color='red',
+            fill=True,
+            fill_color='red'
         ).add_to(m)
 
         # 展示地图
