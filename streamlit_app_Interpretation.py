@@ -8,9 +8,9 @@ st.title("🎬 电影同声传译 (AI)")
 st.info("手机请靠近音箱，点击开始后将实时显示中文翻译。")
 
 # --- 2. 配置区域 ---
-VAPI_ASSISTANT_ID = "585b5b56-9e7b-4c41-b369-693ce3256f85" [cite: 9]
-VAPI_PUBLIC_KEY = "5f372b2b-5f3d-41b7-bd61-1522a5c35ff6" [cite: 9]
-WSS_URL = "wss://un1qwkapg1.execute-api.us-east-2.amazonaws.com/production/" [cite: 9]
+VAPI_ASSISTANT_ID = "585b5b56-9e7b-4c41-b369-693ce3256f85" 
+VAPI_PUBLIC_KEY = "5f372b2b-5f3d-41b7-bd61-1522a5c35ff6" 
+WSS_URL = "wss://un1qwkapg1.execute-api.us-east-2.amazonaws.com/production/" 
 
 # --- 3. 构造 HTML ---
 st_html = f"""
@@ -56,7 +56,7 @@ st_html = f"""
                 
                 // 激活按钮
                 startBtn.disabled = false;
-                startBtn.style.backgroundColor = "#00cc66"; [cite: 12]
+                startBtn.style.backgroundColor = "#00cc66"; 
                 startBtn.style.cursor = "pointer";
                 startBtn.innerText = "开始实时翻译";
                 statusText.innerText = "✅ 系统已就绪";
@@ -68,10 +68,10 @@ st_html = f"""
                     ws.onmessage = (e) => {{
                         const data = JSON.parse(e.data);
                         if (data.translation) {{
-                            subtitleBox.innerHTML = "<div>" + data.translation + "</div>"; [cite: 14]
+                            subtitleBox.innerHTML = "<div>" + data.translation + "</div>"; 
                         }}
                     }};
-                    ws.onclose = () => setTimeout(connectWS, 3000); [cite: 15]
+                    ws.onclose = () => setTimeout(connectWS, 3000); 
                 }}
                 connectWS();
 
@@ -79,7 +79,7 @@ st_html = f"""
                 vapiInstance.on('call-start', () => {{
                     statusText.innerText = "🎙️ 正在监听对白...";
                     startBtn.innerText = "停止翻译";
-                    startBtn.style.backgroundColor = "#ff4b4b"; [cite: 20]
+                    startBtn.style.backgroundColor = "#ff4b4b"; 
                 }});
 
                 vapiInstance.on('call-end', () => {{
@@ -99,7 +99,7 @@ st_html = f"""
                     }} else {{
                         try {{
                             statusText.innerText = "正在请求麦克风...";
-                            await vapiInstance.start("{VAPI_ASSISTANT_ID}"); [cite: 19]
+                            await vapiInstance.start("{VAPI_ASSISTANT_ID}"); 
                         }} catch (e) {{
                             alert("请确保在 HTTPS 环境下并允许麦克风权限");
                         }}
