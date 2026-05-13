@@ -7,7 +7,8 @@ st.title("🎬 电影同声传译 (AI)")
 st.info("手机请靠近音箱，点击开始后将实时显示中文翻译。")
 
 # 1. 配置区域
-VAPI_PUBLIC_KEY = "你的_VAPI_PUBLIC_KEY"
+VAPI_ASSISTANT_ID = "585b5b56-9e7b-4c41-b369-693ce3256f85"
+VAPI_PUBLIC_KEY = "5f372b2b-5f3d-41b7-bd61-1522a5c35ff6"
 IOT_ENDPOINT = "你的_AWS_IOT_ENDPOINT" # 从 AWS IoT 设置中获取
 
 # 2. 嵌入 JavaScript 代码
@@ -48,7 +49,7 @@ st_html = f"""
     // --- 2. Vapi 控制 ---
     startBtn.onclick = () => {{
         if (startBtn.innerText === "开始实时翻译") {{
-            vapi.start("YOUR_ASSISTANT_ID"); // 替换为你 Vapi 的 Assistant ID
+            vapi.start("{VAPI_ASSISTANT_ID}"); // 替换为你 Vapi 的 Assistant ID
             startBtn.innerText = "停止";
             startBtn.style.backgroundColor = "#ff4444";
         }} else {{
