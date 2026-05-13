@@ -2,76 +2,70 @@ import streamlit as st
 
 st.set_page_config(page_title="Movie AI Translator", layout="centered")
 
-# --- 配置 (请再次确认 ID 是否正确) ---
+# --- 1. 配置 (保持不变) ---
 VAPI_ASSISTANT_ID = "585b5b56-9e7b-4c41-b369-693ce3256f85"
 VAPI_PUBLIC_KEY = "5f372b2b-5f3d-41b7-bd61-1522a5c35ff6"
 WSS_URL = "wss://un1qwkapg1.execute-api.us-east-2.amazonaws.com/production/"
 
 st.title("🎬 电影同声传译 (AI)")
 
-# 使用 st.markdown 注入 HTML 和脚本
-# 注意：一定要把 unsafe_allow_html 设为 True
+# --- 2. 注入逻辑 (核心：移除 components.html) ---
 st.markdown(f"""
-<div id="translator-ui" style="border: 1px solid #444; padding: 20px; border-radius: 15px;">
-    <div id="subtitle-box" style="background-color: #1a1a1a; color: #ffcc00; padding: 20px; border-radius: 10px; min-height: 120px; font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px;">
-        等待翻译中...
+<div id="translator-ui" style="background: #1e1e1e; padding: 25px; border-radius: 15px; border: 1px solid #333;">
+    <div id="subtitle-box" style="background: #000; color: #ffcc00; padding: 20px; border-radius: 10px; min-height: 100px; font-size: 22px; font-weight: bold; text-align: center; margin-bottom: 20px; border: 1px solid #444;">
+        等待语音输入...
     </div>
-    <button id="v-action-btn" style="width: 100%; height: 60px; background-color: #00cc66; color: white; border: none; border-radius: 8px; font-size: 20px; cursor: pointer; font-weight: bold;">
-        开始实时翻译
+    <button id="v-btn" style="width: 100%; height: 60px; background: #00cc66; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; font-weight: bold; transition: 0.3s;">
+        ▶ 开始实时翻译
     </button>
-    <p id="v-status" style="color: #888; font-size: 14px; text-align: center; margin-top: 10px;">连接状态: 等待操作...</p>
+    <p id="v-status" style="color: #888; font-size: 13px; text-align: center; margin-top: 15px;">
+        系统状态: <span id="status-tag">准备就绪</span>
+    </p>
 </div>
 
 <script type="module">
     import Vapi from 'https://esm.sh/@vapi-ai/web@2.5.2';
 
-    const subBox = document.getElementById('subtitle-box');
-    const status = document.getElementById('v-status');
-    const btn = document.getElementById('v-action-btn');
-    
-    // 初始化 Vapi
-    const vapi = new Vapi("{VAPI_PUBLIC_KEY}");
-    console.log("Vapi Object Created");
-    status.innerText = "✅ 引擎加载成功";
+    const btn = document.getElementById('v-btn');
+    const tag = document.getElementById('status-tag');
+    const sub = document.getElementById('subtitle-box');
 
-    // WebSocket 处理翻译显示 [cite: 21]
-    let ws = new WebSocket("{WSS_URL}");
+    // 1. 初始化引擎
+    const vapi = new Vapi("{VAPI_PUBLIC_KEY}");
+    tag.innerText = "✅ 引擎已就绪";
+
+    // 2. WebSocket 翻译逻辑 [cite: 7]
+    const ws = new WebSocket("{WSS_URL}");
     ws.onmessage = (e) => {{
         const data = JSON.parse(e.data);
-        if (data.translation) {{
-            subBox.innerHTML = '<div style="color:#ffcc00;">' + data.translation + '</div>';
-        }}
+        if (data.translation) sub.innerText = data.translation;
     }};
 
-    // 监听 Vapi 事件 [cite: 22, 23]
+    // 3. Vapi 事件 [cite: 8, 9]
     vapi.on('call-start', () => {{
-        status.innerText = "🎙️ 正在监听翻译...";
-        btn.innerText = "停止翻译";
-        btn.style.backgroundColor = "#ff4b4b";
+        tag.innerText = "🎙️ 正在通话中...";
+        btn.innerText = "⏹ 停止翻译";
+        btn.style.background = "#ff4b4b";
     }});
 
     vapi.on('call-end', () => {{
-        status.innerText = "✅ 已结束";
-        btn.innerText = "开始实时翻译";
-        btn.style.backgroundColor = "#00cc66";
+        tag.innerText = "✅ 已挂断";
+        btn.innerText = "▶ 开始实时翻译";
+        btn.style.background = "#00cc66";
     }});
 
-    vapi.on('error', (err) => {{
-        console.error("Vapi Error:", err);
-        status.innerText = "❌ 错误: " + (err.message || "环境限制");
+    vapi.on('error', (e) => {{
+        tag.innerText = "❌ 错误: " + (e.message || "权限被拒绝");
+        console.error(e);
     }});
 
-    // 按钮点击逻辑 [cite: 24, 25, 26]
+    // 4. 点击逻辑 (确保在最后绑定) [cite: 10, 11]
     btn.onclick = async () => {{
-        if (btn.innerText.includes("开始")) {{
-            status.innerText = "正在唤起麦克风...";
-            try {{
-                await vapi.start("{VAPI_ASSISTANT_ID}");
-            }} catch (e) {{
-                status.innerText = "❌ 启动失败: " + e.message;
-            }}
-        }} else {{
+        if (vapi.isCallActive()) {{
             vapi.stop();
+        }} else {{
+            tag.innerText = "正在申请麦克风...";
+            await vapi.start("{VAPI_ASSISTANT_ID}");
         }}
     }};
 </script>
