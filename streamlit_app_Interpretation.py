@@ -6,7 +6,6 @@ st.set_page_config(
     layout="centered"
 )
 
-# ===== 配置 =====
 VAPI_ASSISTANT_ID = "585b5b56-9e7b-4c41-b369-693ce3256f85"
 VAPI_PUBLIC_KEY = "5f372b2b-5f3d-41b7-bd61-1522a5c35ff6"
 WSS_URL = "wss://un1qwkapg1.execute-api.us-east-2.amazonaws.com/production/"
@@ -16,7 +15,6 @@ st.title("🎬 电影同声传译 (AI)")
 html_code = """
 <!DOCTYPE html>
 <html>
-
 <body style="margin:0;padding:0;background:#1a1a1a;">
 
 <div style="
@@ -26,7 +24,6 @@ html_code = """
     text-align:center;
     font-family:Arial;
 ">
-
     <div id="subtitle-display" style="
         color:#ffcc00;
         min-height:80px;
@@ -57,93 +54,108 @@ html_code = """
     ">
         状态: 初始化中...
     </p>
-
 </div>
 
 <script type="module">
-
-import Vapi from 'https://esm.sh/@vapi-ai/web@2.5.2';
+import Vapi from 'https://esm.sh/@vapi-ai/web@2.5.3';
 
 const display = document.getElementById('subtitle-display');
 const msg = document.getElementById('v-msg');
 const btn = document.getElementById('v-btn');
 
 let vapi = null;
+let isActive = false;
+
+function setIdle() {
+    isActive = false;
+    msg.innerText = '状态: 已停止';
+    btn.innerText = '开始实时翻译';
+    btn.style.background = '#00cc66';
+}
+
+function setActive() {
+    isActive = true;
+    msg.innerText = '🎙️ 正在监听';
+    btn.innerText = '停止翻译';
+    btn.style.background = '#ff4b4b';
+}
 
 try {
-
     vapi = new Vapi('__PUBLIC_KEY__');
 
+    vapi.on('call-start', () => {
+        console.log('Vapi call started');
+        setActive();
+    });
+
+    vapi.on('call-end', () => {
+        console.log('Vapi call ended');
+        setIdle();
+    });
+
+    vapi.on('error', (err) => {
+        console.error('Vapi error:', err);
+        msg.innerText = '❌ Vapi 出错，请检查 Assistant ID / Public Key / 麦克风权限';
+        setIdle();
+    });
+
     msg.innerText = '✅ Vapi 已加载';
-
-} catch(err) {
-
+} catch (err) {
     msg.innerText = '❌ Vapi 加载失败';
-
     console.error(err);
 }
 
-const ws = new WebSocket('__WSS_URL__');
+try {
+    const ws = new WebSocket('__WSS_URL__');
 
-ws.onopen = () => {
-    console.log("WebSocket 已连接");
-};
+    ws.onopen = () => {
+        console.log('WebSocket 已连接');
+    };
 
-ws.onmessage = (e) => {
-
-    try {
-
-        const d = JSON.parse(e.data);
-
-        if (d.translation) {
-            display.innerText = d.translation;
+    ws.onmessage = (e) => {
+        try {
+            const d = JSON.parse(e.data);
+            if (d.translation) {
+                display.innerText = d.translation;
+            }
+        } catch (err) {
+            console.error('WebSocket message parse error:', err);
         }
+    };
 
-    } catch(err) {
-
-        console.error(err);
-
-    }
-};
-
-ws.onerror = (e) => {
-    console.error("WebSocket 错误", e);
-};
+    ws.onerror = (e) => {
+        console.error('WebSocket 错误:', e);
+    };
+} catch (err) {
+    console.error('WebSocket 初始化失败:', err);
+}
 
 btn.onclick = async () => {
-
     if (!vapi) {
         msg.innerText = '❌ Vapi 未初始化';
         return;
     }
 
     try {
-        if (vapi.isCallActive()) {
+        if (isActive) {
             vapi.stop();
-            msg.innerText = '🛑 已停止';
-            btn.innerText = '开始实时翻译';
-            btn.style.background = '#00cc66';
+            setIdle();
         } else {
+            msg.innerText = '🎙️ 正在请求麦克风权限...';
             await vapi.start('__ASSISTANT_ID__');
-            msg.innerText = '🎙️ 正在监听';
-            btn.innerText = '停止翻译';
-            btn.style.background = '#ff4b4b';
-
         }
-
-    } catch(err) {
-        console.error(err);
-        msg.innerText = '❌ 启动失败，请检查麦克风权限';
+    } catch (err) {
+        console.error('启动/停止失败:', err);
+        msg.innerText = '❌ 启动失败：请检查麦克风权限、Assistant ID、Public Key';
+        setIdle();
     }
 };
-
 </script>
 
 </body>
 </html>
 """
 
-# ===== 替换变量 =====
 html_code = (
     html_code
     .replace("__PUBLIC_KEY__", VAPI_PUBLIC_KEY)
@@ -151,7 +163,6 @@ html_code = (
     .replace("__ASSISTANT_ID__", VAPI_ASSISTANT_ID)
 )
 
-# ===== 渲染 HTML =====
 components.html(
     html_code,
     height=420,
