@@ -25,51 +25,56 @@ st_html = f"""
 <p id="status-text" style="color: #888; font-size: 14px; text-align: center; margin-top: 10px;">连接状态: 准备中...</p>
 
 <script type="module">
-    // --- 核心配置 ---
-    const WSS_URL = "{WSS_URL}"; 
+    import VapiWeb from 'https://cdn.jsdelivr.net/npm/@vapi-ai/web@2.5.2/+esm';
+    
+    // --- 配置 ---
+    const WSS_URL = "wss://un1qwkapg1.execute-api.us-east-2.amazonaws.com/production/"; // 来自 image_55087e.png
+    const VAPI_PUBLIC_KEY = "{VAPI_PUBLIC_KEY}";
+    const VAPI_ASSISTANT_ID = "{VAPI_ASSISTANT_ID}";
+
     const subtitleBox = document.getElementById('subtitle-box');
     const statusText = document.getElementById('status-text');
-    let socket;
+    const startBtn = document.getElementById('start-btn');
 
-    function connectWebSocket() {{
-        statusText.innerText = "正在建立 WebSocket 连接...";
-        
-        // 使用原生浏览器 WebSocket，无需签名和额外库
-        socket = new WebSocket(WSS_URL);
+    // 1. 初始化 WebSocket 连接
+    const ws = new WebSocket(WSS_URL);
 
-        socket.onopen = () => {{
-            statusText.innerText = "✅ 已通过 API Gateway 连接";
-            statusText.style.color = "#00cc66";
-            console.log("WebSocket Connected");
-        }};
+    ws.onopen = () => {
+        statusText.innerText = "✅ 已通过 API Gateway 连接";
+        statusText.style.color = "#00cc66";
+    };
 
-        socket.onmessage = (event) => {{
-            try {{
-                const data = JSON.parse(event.data);
-                if (data.translation) {{
-                    subtitleBox.innerHTML = `<div style="color:#ffcc00;">${{data.translation}}</div>`;
-                }}
-            }} catch (err) {{
-                console.error("解析消息失败:", err);
-            }}
-        }};
+    ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.translation) {
+            subtitleBox.innerHTML = `<div style="color:#ffcc00;">${data.translation}</div>`;
+        }
+    };
 
-        socket.onclose = () => {{
-            statusText.innerText = "❌ 连接已断开，正在尝试重连...";
-            statusText.style.color = "#ff4444";
-            setTimeout(connectWebSocket, 3000); // 3秒后自动重连
-        }};
+    ws.onerror = (e) => {
+        statusText.innerText = "❌ WebSocket 连接失败";
+        console.error(e);
+    };
 
-        socket.onerror = (error) => {{
-            statusText.innerText = "❌ WebSocket 错误";
-            console.error("WebSocket Error:", error);
-        }};
-    }}
+    // 2. 初始化 Vapi
+    const vapi = new VapiWeb(VAPI_PUBLIC_KEY);
 
-    // 页面加载完成后立即连接
-    connectWebSocket();
-    
-    // ... 这里保留你原有的 Vapi 逻辑 ...
+    startBtn.addEventListener('click', () => {
+        if (startBtn.innerText === "开始实时翻译") {
+            vapi.start(VAPI_ASSISTANT_ID);
+            startBtn.innerText = "停止翻译";
+            startBtn.style.backgroundColor = "#ff4b4b";
+        } else {
+            vapi.stop();
+            startBtn.innerText = "开始实时翻译";
+            startBtn.style.backgroundColor = "#00cc66";
+        }
+    });
+
+    vapi.on('call-start', () => statusText.innerText = "🎙️ 正在监听电影对白...");
+    vapi.on('call-end', () => statusText.innerText = "✅ 已结束");
+    vapi.on('error', (e) => console.error('Vapi Error:', e));
+
 </script>
 """
 
