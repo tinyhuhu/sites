@@ -6,12 +6,12 @@ st.set_page_config(page_title="Movie AI Translator", layout="centered")
 st.title("🎬 电影同声传译 (AI)")
 st.info("手机请靠近音箱，点击开始后将实时显示中文翻译。")
 
-# 1. 配置区域 [cite: 9]
+# 1. 配置区域
 VAPI_ASSISTANT_ID = "585b5b56-9e7b-4c41-b369-693ce3256f85"
 VAPI_PUBLIC_KEY = "5f372b2b-5f3d-41b7-bd61-1522a5c35ff6"
 IOT_ENDPOINT = "a3pqsh1g7enzj8-ats.iot.us-east-2.amazonaws.com" 
 
-# 2. 嵌入 JavaScript 代码 [cite: 10]
+# 2. 嵌入 JavaScript 代码
 st_html = f"""
 <div id="subtitle-box" style="background-color: #1a1a1a; color: #ffcc00; padding: 20px; border-radius: 10px; min-height: 100px;
 font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px;">
@@ -24,18 +24,18 @@ color: white; border: none; border-radius: 5px; font-size: 18px;">开始实时�
 <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
 
 <script type="module">
-    // 使用这种导入方式确保能拿到正确的构造函数
     import VapiWeb from 'https://cdn.jsdelivr.net/npm/@vapi-ai/web@2.5.2/+esm';
 
     const startBtn = document.getElementById('start-btn');
     const subtitleBox = document.getElementById('subtitle-box');
     
-    // 修正初始化逻辑：如果 VapiWeb 本身就是类则直接 new，否则尝试 .default
     const Vapi = typeof VapiWeb === 'function' ? VapiWeb : VapiWeb.default;
     const vapi = new Vapi("{VAPI_PUBLIC_KEY}");
 
     // --- 1. AWS IoT MQTT 设置 ---
-    const client = new Paho.MQTT.Client("wss://" + "{IOT_ENDPOINT}" + "/mqtt", "clientId-" + Math.random());
+    // 增加随机 ClientID 避免冲突
+    const clientId = "client-" + Math.floor(Math.random() * 10000);
+    const client = new Paho.MQTT.Client("wss://" + "{IOT_ENDPOINT}" + "/mqtt", clientId);
     
     client.onMessageArrived = function(message) {{
         try {{
@@ -49,22 +49,30 @@ color: white; border: none; border-radius: 5px; font-size: 18px;">开始实时�
         }}
     }};
 
-    client.connect({{
-        useSSL: true,
-        timeout: 3,
-        onSuccess: function() {{
-            client.subscribe("movie/subtitle");
-            console.log("MQTT 连接成功");
-        }},
-        onFailure: function(err) {{
-            console.error("MQTT 连接失败:", err);
-        }}
-    }});
+    // 尝试连接
+    function connectMQTT() {{
+        client.connect({{
+            useSSL: true,
+            timeout: 10,
+            keepAliveInterval: 30,
+            onSuccess: function() {{
+                client.subscribe("movie/subtitle");
+                console.log("MQTT 连接成功");
+            }},
+            onFailure: function(err) {{
+                console.log("MQTT 连接失败，正在重试...");
+                setTimeout(connectMQTT, 3000); // 失败重连
+            }}
+        }});
+    }}
+
+    connectMQTT();
 
     // --- 2. Vapi 控制 ---
     startBtn.onclick = () => {{
         if (startBtn.innerText === "开始实时翻译") {{
-            vapi.start("{VAPI_ASSISTANT_ID}");
+            // 确保传入的是对象
+            vapi.start({{ assistantId: "{VAPI_ASSISTANT_ID}" }});
             startBtn.innerText = "停止";
             startBtn.style.backgroundColor = "#ff4444";
         }} else {{
