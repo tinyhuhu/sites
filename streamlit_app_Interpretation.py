@@ -20,7 +20,7 @@ WSS_URL = "wss://un1qwkapg1.execute-api.us-east-2.amazonaws.com/production/"
 
 # 注意：在 f"""...""" 中，所有的 JS 大括号必须写成 {{ }}
 st_html = f"""
-<script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web@2.5.2/dist/vapi.browser.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web@2.5.2/+esm"></script>
 
 <div id="subtitle-box" style="background-color: #1a1a1a; color: #ffcc00; padding: 20px; border-radius: 10px; min-height: 120px; font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px; border: 2px solid #333;">
     等待翻译中...
