@@ -76,118 +76,80 @@
 </head>
 
 <body>
-
   <div class="container">
-
     <h1>🎬 电影同声传译 (AI)</h1>
-
     <div class="card">
-
       <div id="subtitle">
         等待语音输入...
       </div>
-
       <button id="startBtn">
         开始实时翻译
       </button>
-
       <div id="status">
         状态：初始化中...
       </div>
-
       <div id="debug"></div>
-
     </div>
 
   </div>
-
   <script type="module">
-
     import Vapi from "https://esm.sh/@vapi-ai/web@2.5.2";
-
     /*
     ============================================
     修改这里
     ============================================
     */
 
-    const VAPI_PUBLIC_KEY = "YOUR_VAPI_PUBLIC_KEY";
-
-    const VAPI_ASSISTANT_ID = "YOUR_ASSISTANT_ID";
-
+    const VAPI_PUBLIC_KEY = "8372d694-85f5-4957-89d5-b74bb272012f";
+    const VAPI_ASSISTANT_ID = "585b5b56-9e7b-4c41-b369-693ce3256f85";
     const WSS_URL =
-      "wss://YOUR_API_GATEWAY.execute-api.us-east-2.amazonaws.com/production/";
-
+      "wss://un1qwkapg1.execute-api.us-east-2.amazonaws.com/production/";
     /*
     ============================================
     页面元素
     ============================================
     */
-
     const subtitle = document.getElementById("subtitle");
-
     const statusEl = document.getElementById("status");
-
     const debugEl = document.getElementById("debug");
-
     const startBtn = document.getElementById("startBtn");
-
     /*
     ============================================
     全局状态
     ============================================
     */
-
     let vapi = null;
-
     let ws = null;
-
     let isActive = false;
-
     let currentSubtitle = "";
 
     // 前端唯一 session id
     const sessionId = crypto.randomUUID();
-
     console.log("sessionId:", sessionId);
-
     /*
     ============================================
     UI Helpers
     ============================================
     */
-
     function setStatus(text) {
       statusEl.textContent = `状态：${text}`;
     }
-
     function log(message, data = null) {
-
       console.log(message, data || "");
-
       debugEl.textContent =
         `[${new Date().toLocaleTimeString()}] ${message}`;
     }
-
     function setIdle() {
-
       isActive = false;
-
       startBtn.textContent = "开始实时翻译";
-
       startBtn.classList.remove("stop");
-
       setStatus("已停止");
     }
 
     function setActive() {
-
       isActive = true;
-
       startBtn.textContent = "停止翻译";
-
       startBtn.classList.add("stop");
-
       setStatus("正在监听");
     }
 
@@ -198,99 +160,66 @@
     */
 
     async function connectWebSocket() {
-
       return new Promise((resolve, reject) => {
-
         const wsUrl =
           `${WSS_URL}?sessionId=${encodeURIComponent(sessionId)}`;
-
         ws = new WebSocket(wsUrl);
-
         ws.onopen = () => {
-
           console.log("WebSocket 已连接");
-
           // 注册 session
           ws.send(JSON.stringify({
             action: "register",
             sessionId: sessionId
           }));
-
           setStatus("WebSocket 已连接");
-
           resolve();
         };
-
         ws.onerror = (err) => {
-
           console.error("WebSocket error:", err);
-
           setStatus("WebSocket 连接失败");
-
           reject(err);
         };
-
         ws.onclose = () => {
-
           console.log("WebSocket 已关闭");
         };
-
         ws.onmessage = (event) => {
-
           try {
-
             const data = JSON.parse(event.data);
-
             console.log("收到后端消息:", data);
-
             /*
             Lambda 返回格式：
-
             {
               "type": "translation",
               "text": "你好"
             }
-
             或：
-
             {
               "type": "delta",
               "text": "你好"
             }
             */
-
             // 完整翻译
             if (data.type === "translation") {
-
               currentSubtitle = data.text;
-
               subtitle.textContent = currentSubtitle;
-
               return;
             }
 
             // 流式增量
             if (data.type === "delta") {
-
               currentSubtitle += data.text;
-
               subtitle.textContent = currentSubtitle;
-
               return;
             }
 
             // 清空字幕
             if (data.type === "clear") {
-
               currentSubtitle = "";
-
               subtitle.textContent = "等待语音输入...";
-
               return;
             }
 
           } catch (err) {
-
             console.error("WebSocket message parse error:", err);
           }
         };
@@ -304,14 +233,12 @@
     */
 
     async function checkMicrophone() {
-
       const stream =
         await navigator.mediaDevices.getUserMedia({
           audio: true
         });
 
       console.log("Mic OK");
-
       stream.getTracks().forEach(track => track.stop());
     }
 
@@ -322,35 +249,23 @@
     */
 
     function initVapi() {
-
       vapi = new Vapi(VAPI_PUBLIC_KEY);
-
       vapi.on("call-start", () => {
-
         console.log("Vapi call started");
-
         setActive();
       });
-
       vapi.on("call-end", () => {
-
         console.log("Vapi call ended");
-
         setIdle();
       });
-
       vapi.on("error", (err) => {
-
         console.error("Vapi error:", err);
-
         setStatus("Vapi 出错，请打开 Console");
-
         setIdle();
       });
 
       // 调试 transcript/message
       vapi.on("message", (msg) => {
-
         console.log("Vapi message:", msg);
       });
 
@@ -364,36 +279,28 @@
     */
 
     async function startTranslation() {
-
       try {
-
         currentSubtitle = "";
-
         subtitle.textContent = "正在连接...";
-
         // 连接 websocket
         setStatus("连接 WebSocket 中");
-
         if (!ws || ws.readyState !== WebSocket.OPEN) {
-
           await connectWebSocket();
         }
 
         // 麦克风权限
         setStatus("请求麦克风权限中");
-
         await checkMicrophone();
 
         // 启动 Vapi
         setStatus("连接 Vapi 中");
-
+        
         await vapi.start(
           VAPI_ASSISTANT_ID,
           {
             variableValues: {
               sessionId: sessionId
             },
-
             metadata: {
               sessionId: sessionId
             }
@@ -401,14 +308,10 @@
         );
 
       } catch (err) {
-
         console.error("启动失败:", err);
-
         subtitle.textContent =
           "启动失败，请检查 Console";
-
         setStatus("启动失败");
-
         setIdle();
       }
     }
@@ -420,26 +323,19 @@
     */
 
     function stopTranslation() {
-
       try {
-
         if (vapi) {
-
           vapi.stop();
         }
 
         if (ws && ws.readyState === WebSocket.OPEN) {
-
           ws.send(JSON.stringify({
             action: "stop",
             sessionId: sessionId
           }));
         }
-
         setIdle();
-
       } catch (err) {
-
         console.error("停止失败:", err);
       }
     }
@@ -451,13 +347,9 @@
     */
 
     startBtn.onclick = async () => {
-
       if (!isActive) {
-
         await startTranslation();
-
       } else {
-
         stopTranslation();
       }
     };
@@ -467,11 +359,8 @@
     页面初始化
     ============================================
     */
-
     initVapi();
-
   </script>
-
 </body>
 
 </html>
