@@ -23,7 +23,7 @@ font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px;">
 <button id="start-btn" style="width: 100%; height: 50px; background-color: #00cc66;
 color: white; border: none; border-radius: 5px; font-size: 18px;">开始实时翻译</button>
 
-<script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web@latest/dist/vapi-sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web@2.5.2/dist/vapi.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
 
 <script>
