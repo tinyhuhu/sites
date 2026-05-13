@@ -6,12 +6,12 @@ st.set_page_config(page_title="Movie AI Translator", layout="centered")
 st.title("🎬 电影同声传译 (AI)")
 st.info("手机请靠近音箱，点击开始后将实时显示中文翻译。")
 
-# 1. 配置区域
+# 1. 配置区域 [cite: 9]
 VAPI_ASSISTANT_ID = "585b5b56-9e7b-4c41-b369-693ce3256f85"
 VAPI_PUBLIC_KEY = "5f372b2b-5f3d-41b7-bd61-1522a5c35ff6"
 IOT_ENDPOINT = "a3pqsh1g7enzj8-ats.iot.us-east-2.amazonaws.com" 
 
-# 2. 嵌入 JavaScript 代码
+# 2. 嵌入 JavaScript 代码 [cite: 10]
 st_html = f"""
 <div id="subtitle-box" style="background-color: #1a1a1a; color: #ffcc00; padding: 20px; border-radius: 10px; min-height: 100px;
 font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px;">
@@ -24,11 +24,14 @@ color: white; border: none; border-radius: 5px; font-size: 18px;">开始实时�
 <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
 
 <script type="module">
-    // 使用 ES Modules 方式导入 Vapi，彻底解决 "exports is not defined" 报错
-    import Vapi from 'https://cdn.jsdelivr.net/npm/@vapi-ai/web@2.5.2/+esm';
+    // 使用这种导入方式确保能拿到正确的构造函数
+    import VapiWeb from 'https://cdn.jsdelivr.net/npm/@vapi-ai/web@2.5.2/+esm';
 
     const startBtn = document.getElementById('start-btn');
     const subtitleBox = document.getElementById('subtitle-box');
+    
+    // 修正初始化逻辑：如果 VapiWeb 本身就是类则直接 new，否则尝试 .default
+    const Vapi = typeof VapiWeb === 'function' ? VapiWeb : VapiWeb.default;
     const vapi = new Vapi("{VAPI_PUBLIC_KEY}");
 
     // --- 1. AWS IoT MQTT 设置 ---
