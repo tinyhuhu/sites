@@ -20,7 +20,6 @@ st_html = f"""
 <p id="status-text" style="color: #888; font-size: 14px; text-align: center; margin-top: 10px;">连接状态: 正在初始化...</p>
 
 <script type="module">
-    // 使用 esm.sh 引入 Vapi，这是目前最稳定且支持直接在浏览器 import 的方式
     import Vapi from 'https://esm.sh/@vapi-ai/web@2.5.2';
 
     const subtitleBox = document.getElementById('subtitle-box');
@@ -28,74 +27,65 @@ st_html = f"""
     const startBtn = document.getElementById('start-btn');
 
     let ws;
-    let vapi;
-
-    try {{
-        vapi = new Vapi("{VAPI_PUBLIC_KEY}");
-        console.log("Vapi initialized successfully");
-    }} catch (e) {{
-        console.error("Vapi init error:", e);
-        statusText.innerText = "❌ Vapi 初始化失败";
-    }}
+    const vapi = new Vapi("{VAPI_PUBLIC_KEY}");
 
     // --- WebSocket 逻辑 ---
     function connectWebSocket() {{
         ws = new WebSocket("{WSS_URL}");
-
         ws.onopen = () => {{
             statusText.innerText = "✅ 已通过 API Gateway 连接";
             statusText.style.color = "#00cc66";
         }};
-
         ws.onmessage = (event) => {{
-            try {{
-                const data = JSON.parse(event.data);
-                if (data.translation) {{
-                    subtitleBox.innerHTML = `<div style="color:#ffcc00;">${{data.translation}}</div>`;
-                }}
-            }} catch (e) {{
-                console.error("Parse error:", e);
+            const data = JSON.parse(event.data);
+            if (data.translation) {{
+                subtitleBox.innerHTML = `<div style="color:#ffcc00;">${{data.translation}}</div>`;
             }}
         }};
-
         ws.onclose = () => {{
-            statusText.innerText = "❌ 连接已断开，正在尝试重连...";
-            statusText.style.color = "#ff4b4b";
             setTimeout(connectWebSocket, 3000);
         }};
     }}
-
     connectWebSocket();
 
-    // --- Vapi 事件 ---
+    // --- Vapi 事件监控 ---
     vapi.on('call-start', () => {{
-        statusText.innerText = "🎙️ 正在监听并实时翻译...";
+        statusText.innerText = "🎙️ 正在监听中...";
         statusText.style.color = "#ffcc00";
     }});
 
     vapi.on('call-end', () => {{
         statusText.innerText = "✅ 已通过 API Gateway 连接";
         statusText.style.color = "#00cc66";
+        startBtn.innerText = "开始实时翻译";
+        startBtn.style.backgroundColor = "#00cc66";
     }});
 
-    vapi.on('error', (error) => {{
-        console.error('Vapi Error:', error);
-        statusText.innerText = "❌ Vapi 呼叫错误";
+    vapi.on('error', (err) => {{
+        console.error('Vapi Detailed Error:', err);
+        statusText.innerText = "❌ 呼叫错误: " + (err.message || "麦克风或连接失败");
+        statusText.style.color = "#ff4b4b";
+        startBtn.innerText = "开始实时翻译";
+        startBtn.style.backgroundColor = "#00cc66";
     }});
 
     // --- 按钮逻辑 ---
-    startBtn.addEventListener('click', () => {{
+    startBtn.addEventListener('click', async () => {{
         if (startBtn.innerText === "开始实时翻译") {{
-            vapi.start("{VAPI_ASSISTANT_ID}");
-            startBtn.innerText = "停止翻译";
-            startBtn.style.backgroundColor = "#ff4b4b";
+            try {{
+                startBtn.innerText = "正在呼叫...";
+                await vapi.start("{VAPI_ASSISTANT_ID}");
+                startBtn.innerText = "停止翻译";
+                startBtn.style.backgroundColor = "#ff4b4b";
+            }} catch (e) {{
+                console.error("Start failed", e);
+            }}
         }} else {{
             vapi.stop();
-            startBtn.innerText = "开始实时翻译";
-            startBtn.style.backgroundColor = "#00cc66";
         }}
     }});
 </script>
 """
 
-components.html(st_html, height=600)
+# 关键：添加 allow="microphone" 权限
+components.html(st_html, height=600, allow="microphone")
