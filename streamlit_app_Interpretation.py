@@ -60,17 +60,17 @@ st_html = f"""
     }});
 
     vapi.on('error', (err) => {
-    // 打印完整的错误对象以查看具体原因
-    console.error('Vapi Error Full Object:', JSON.stringify(err, null, 2));
-    
-    let errorMsg = "呼叫错误";
-    if (err.error && err.error.message) {
-        errorMsg += ": " + err.error.message;
-    }
-    
-    statusText.innerText = "❌ " + errorMsg;
-    statusText.style.color = "#ff4b4b";
-});
+        // 打印完整的错误对象以查看具体原因
+        console.error('Vapi Error Full Object:', JSON.stringify(err, null, 2));
+        
+        let errorMsg = "呼叫错误";
+        if (err.error && err.error.message) {
+            errorMsg += ": " + err.error.message;
+        }
+        
+        statusText.innerText = "❌ " + errorMsg;
+        statusText.style.color = "#ff4b4b";
+    });
 
     startBtn.addEventListener('click', async () => {{
         if (startBtn.innerText === "开始实时翻译") {{
