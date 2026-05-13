@@ -107,50 +107,33 @@ ws.onmessage = (e) => {
 };
 
 ws.onerror = (e) => {
-
     console.error("WebSocket 错误", e);
-
 };
 
 btn.onclick = async () => {
 
     if (!vapi) {
-
         msg.innerText = '❌ Vapi 未初始化';
-
         return;
     }
 
     try {
-
         if (vapi.isCallActive()) {
-
             vapi.stop();
-
             msg.innerText = '🛑 已停止';
-
             btn.innerText = '开始实时翻译';
-
             btn.style.background = '#00cc66';
-
         } else {
-
             await vapi.start('__ASSISTANT_ID__');
-
             msg.innerText = '🎙️ 正在监听';
-
             btn.innerText = '停止翻译';
-
             btn.style.background = '#ff4b4b';
 
         }
 
     } catch(err) {
-
         console.error(err);
-
         msg.innerText = '❌ 启动失败，请检查麦克风权限';
-
     }
 };
 
