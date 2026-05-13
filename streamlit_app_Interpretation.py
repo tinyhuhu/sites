@@ -64,9 +64,9 @@ st_html = f"""
         console.error('Vapi Error Full Object:', JSON.stringify(err, null, 2));
         
         let errorMsg = "呼叫错误";
-        if (err.error && err.error.message) {
+        if (err.error && err.error.message) {{
             errorMsg += ": " + err.error.message;
-        }
+        }}
         
         statusText.innerText = "❌ " + errorMsg;
         statusText.style.color = "#ff4b4b";
