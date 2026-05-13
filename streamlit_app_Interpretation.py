@@ -20,6 +20,8 @@ WSS_URL = "wss://un1qwkapg1.execute-api.us-east-2.amazonaws.com/production/"
 
 # 注意：在 f"""...""" 中，所有的 JS 大括号必须写成 {{ }}
 st_html = f"""
+<script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web@2.5.2/dist/vapi.browser.js"></script>
+
 <div id="subtitle-box" style="background-color: #1a1a1a; color: #ffcc00; padding: 20px; border-radius: 10px; min-height: 120px; font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px; border: 2px solid #333;">
     等待翻译中...
 </div>
@@ -37,46 +39,12 @@ st_html = f"""
 
     let vapiInstance = null;
 
-    // 1. 更加强健的加载逻辑
-    function loadVapiSDK() {{
-        const script = document.createElement('script');
-        // 尝试使用更稳定的 CDN 路径
-        script.src = "https://cdn.jsdelivr.net/npm/@vapi-ai/web@2.5.2/dist/vapi.browser.js";
-        script.async = true;
-        
-        script.onload = () => {{
-            console.log("SDK 源码已加载");
-            try {{
-                // 自动适配类名 (Vapi 或 VapiWeb)
-                const VapiClass = window.Vapi || window.VapiWeb;
-                if (VapiClass) {{
-                    vapiInstance = new VapiClass(VAPI_PUBLIC_KEY);
-                    statusText.innerText = "✅ 系统就绪 (WebSocket + SDK)";
-                    statusText.style.color = "#00cc66";
-                    console.log("Vapi 实例初始化成功");
-
-                    vapiInstance.on('call-start', () => {{
-                        statusText.innerText = "🎙️ 正在监听并实时翻译...";
-                        statusText.style.color = "#ffcc00";
-                    }});
-                    vapiInstance.on('call-end', () => {{
-                        statusText.innerText = "✅ 已通过 API Gateway 连接";
-                        statusText.style.color = "#00cc66";
-                    }});
-                }} else {{
-                    throw new Error("无法在全局对象中找到 Vapi 类");
-                }}
-            }} catch (err) {{
-                console.error("初始化错误:", err);
-                statusText.innerText = "❌ SDK 挂载失败，请刷新页面";
-            }}
-        }};
-        document.head.appendChild(script);
-    }}
-
-    // 2. WebSocket 连接
+    // 2. WebSocket 连接 (保持不变)
     const ws = new WebSocket(WSS_URL);
-    ws.onopen = () => {{ console.log("WebSocket 已连接"); }};
+    ws.onopen = () => {{
+        statusText.innerText = "✅ 已通过 API Gateway 连接";
+        statusText.style.color = "#00cc66";
+    }};
     ws.onmessage = (event) => {{
         const data = JSON.parse(event.data);
         if (data.translation) {{
@@ -84,13 +52,30 @@ st_html = f"""
         }}
     }};
 
-    // 3. 执行加载
-    loadVapiSDK();
+    // 3. 简化初始化：循环尝试直到 SDK 挂载
+    const initVapi = setInterval(() => {{
+        const VapiClass = window.Vapi || window.VapiWeb;
+        if (VapiClass) {{
+            vapiInstance = new VapiClass(VAPI_PUBLIC_KEY);
+            console.log("Vapi SDK 挂载成功");
+            
+            vapiInstance.on('call-start', () => {{
+                statusText.innerText = "🎙️ 正在监听并实时翻译...";
+                statusText.style.color = "#ffcc00";
+            }});
+            vapiInstance.on('call-end', () => {{
+                statusText.innerText = "✅ 已通过 API Gateway 连接";
+                statusText.style.color = "#00cc66";
+            }});
+            
+            clearInterval(initVapi); // 初始化成功后停止循环
+        }}
+    }}, 500);
 
-    // 4. 按钮控制
+    // 4. 按钮逻辑
     startBtn.addEventListener('click', () => {{
         if (!vapiInstance) {{
-            alert("SDK 尚未加载完成，请稍候几秒或刷新页面");
+            alert("Vapi SDK 还在努力加载中，请稍后几秒...");
             return;
         }}
         
