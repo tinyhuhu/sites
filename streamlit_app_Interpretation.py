@@ -12,6 +12,7 @@ VAPI_PUBLIC_KEY = "5f372b2b-5f3d-41b7-bd61-1522a5c35ff6"
 WSS_URL = "wss://un1qwkapg1.execute-api.us-east-2.amazonaws.com/production/" 
 
 # 2. 嵌入 JavaScript 逻辑
+# 注意：我们这里保持 JS 逻辑不变，但移除 Python 调用处的 allow 参数
 st_html = f"""
 <div id="subtitle-box" style="background-color: #1a1a1a; color: #ffcc00; padding: 20px; border-radius: 10px; min-height: 120px; font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px; border: 2px solid #333;">
     等待翻译中...
@@ -29,7 +30,7 @@ st_html = f"""
     let ws;
     const vapi = new Vapi("{VAPI_PUBLIC_KEY}");
 
-    // --- WebSocket 逻辑 ---
+    // WebSocket 逻辑保持
     function connectWebSocket() {{
         ws = new WebSocket("{WSS_URL}");
         ws.onopen = () => {{
@@ -42,13 +43,10 @@ st_html = f"""
                 subtitleBox.innerHTML = `<div style="color:#ffcc00;">${{data.translation}}</div>`;
             }}
         }};
-        ws.onclose = () => {{
-            setTimeout(connectWebSocket, 3000);
-        }};
+        ws.onclose = () => {{ setTimeout(connectWebSocket, 3000); }};
     }}
     connectWebSocket();
 
-    // --- Vapi 事件监控 ---
     vapi.on('call-start', () => {{
         statusText.innerText = "🎙️ 正在监听中...";
         statusText.style.color = "#ffcc00";
@@ -62,14 +60,12 @@ st_html = f"""
     }});
 
     vapi.on('error', (err) => {{
-        console.error('Vapi Detailed Error:', err);
-        statusText.innerText = "❌ 呼叫错误: " + (err.message || "麦克风或连接失败");
-        statusText.style.color = "#ff4b4b";
+        console.error('Vapi Error:', err);
+        statusText.innerText = "❌ 呼叫错误 (检查麦克风权限)";
         startBtn.innerText = "开始实时翻译";
         startBtn.style.backgroundColor = "#00cc66";
     }});
 
-    // --- 按钮逻辑 ---
     startBtn.addEventListener('click', async () => {{
         if (startBtn.innerText === "开始实时翻译") {{
             try {{
@@ -87,5 +83,10 @@ st_html = f"""
 </script>
 """
 
-# 关键：添加 allow="microphone" 权限
-components.html(st_html, height=600, allow="microphone")
+# 如果升级 Streamlit 失败，请删掉 allow="microphone"，仅保留核心功能测试
+# 如果版本太低，这行会抛出 TypeError
+try:
+    components.html(st_html, height=600, allow="microphone")
+except TypeError:
+    # 兼容低版本 Streamlit
+    components.html(st_html, height=600)
