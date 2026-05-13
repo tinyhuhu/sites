@@ -84,7 +84,12 @@ injection_html = f"""
 
 # --- 4. 使用组件渲染 (关键修改) ---
 # height 参数需要根据内容高度手动调整
-components.html(injection_html, height=350) 
+components.html(
+    injection_html, 
+    height=350, 
+    # 必须显式允许麦克风权限，否则 JavaScript 无法激活 Vapi 引擎
+    allow="microphone" 
+)
 
 st.write("---")
 st.caption("注：请确保通过 HTTPS 或 localhost 访问以获得麦克风权限。")
