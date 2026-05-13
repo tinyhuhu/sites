@@ -59,7 +59,7 @@ st_html = f"""
         startBtn.style.backgroundColor = "#00cc66";
     }});
 
-    vapi.on('error', (err) => {
+    vapi.on('error', (err) => {{
         // 打印完整的错误对象以查看具体原因
         console.error('Vapi Error Full Object:', JSON.stringify(err, null, 2));
         
@@ -70,7 +70,7 @@ st_html = f"""
         
         statusText.innerText = "❌ " + errorMsg;
         statusText.style.color = "#ff4b4b";
-    });
+    }});
 
     startBtn.addEventListener('click', async () => {{
         if (startBtn.innerText === "开始实时翻译") {{
