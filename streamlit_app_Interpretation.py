@@ -131,7 +131,15 @@ try {
 }
 
 
-
+try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    console.log('麦克风 Mic stream OK:', stream);
+    stream.getTracks().forEach(track => track.stop());
+} catch (micErr) {
+    console.error('Mic permission failed:', micErr);
+    msg.innerText = '❌ 浏览器没有拿到麦克风权限';
+    return;
+}
 
 await vapi.start('__ASSISTANT_ID__');
 
