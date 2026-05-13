@@ -30,7 +30,7 @@ st_html = f"""
     // --- 核心配置 ---
     const REGION = "us-east-2";
     const IOT_ENDPOINT = "{IOT_ENDPOINT}"; 
-    const IDENTITY_POOL_ID = "您的_IDENTITY_POOL_ID"; // 请填入您刚才创建后获得的 ID
+    const IDENTITY_POOL_ID = "us-east-2:f82a3d3f-5561-4f43-a0c3-cd87075e477e"; // 请填入您刚才创建后获得的 ID
     
     const subtitleBox = document.getElementById('subtitle-box');
     const statusText = document.getElementById('status-text');
