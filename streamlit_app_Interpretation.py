@@ -7,7 +7,7 @@ st.set_page_config(
 )
 
 VAPI_ASSISTANT_ID = "585b5b56-9e7b-4c41-b369-693ce3256f85"
-VAPI_PUBLIC_KEY = "5f372b2b-5f3d-41b7-bd61-1522a5c35ff6"
+VAPI_PUBLIC_KEY = "8372d694-85f5-4957-89d5-b74bb272012f"
 WSS_URL = "wss://un1qwkapg1.execute-api.us-east-2.amazonaws.com/production/"
 
 st.title("🎬 电影同声传译 (AI)")
