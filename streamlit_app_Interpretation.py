@@ -93,8 +93,18 @@ st_html = f"""
 # 如果版本太低，这行会抛出 TypeError
 try:
     #components.html(st_html, height=600, allow="microphone")
-    st.html(f"<div style='display:none;'>渲染容器</div>{st_html}")
+    components.html(
+        st_html, 
+        height=600, 
+        scrolling=False
+    )
+    #st.html(f"<div style='display:none;'>渲染容器</div>{st_html}")
 except TypeError:
     # 兼容低版本 Streamlit
     #components.html(st_html, height=600)
-    st.html(f"<div style='display:none;'>渲染容器</div>{st_html}")
+    components.html(
+        st_html, 
+        height=600, 
+        scrolling=False
+    )
+    #st.html(f"<div style='display:none;'>渲染容器</div>{st_html}")
