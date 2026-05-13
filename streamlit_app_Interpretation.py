@@ -113,6 +113,5 @@ components.html(
     html_code,
     height=420,
     scrolling=False,
-    # 核心修复：显式允许 iframe 使用麦克风
-    allow="microphone" 
+    
 )
