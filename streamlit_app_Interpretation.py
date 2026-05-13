@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components  # 1. 导入组件模块
 
 # --- 1. 页面配置 ---
 st.set_page_config(
@@ -16,80 +15,89 @@ st.title("🎬 电影同声传译 (AI)")
 st.info("手机请靠近音箱，点击开始后将实时显示中文翻译。")
 
 # --- 3. 构造注入的 HTML ---
-# 注意：这里去掉了多余的 Python 注释，确保字符串纯净
+# 使用 unsafe_allow_html 时，脚本会直接运行在主页面，通常能绕过 iframe 的权限限制
 injection_html = f"""
-<div id="translator-container" style="background-color: #1a1a1a; padding: 25px; border-radius: 15px; border: 2px solid #333; font-family: sans-serif;">
-    <div id="subtitle-box" style="color: #ffcc00; min-height: 120px; font-size: 26px; font-weight: bold; text-align: center; margin-bottom: 25px; display: flex; align-items: center; justify-content: center;">
+<div id="translator-root" style="background-color: #1a1a1a; padding: 25px; border-radius: 15px; border: 2px solid #333; margin-bottom: 20px;">
+    <div id="subtitle-box" style="color: #ffcc00; min-height: 120px; font-size: 26px; font-weight: bold; text-align: center; margin-bottom: 25px; display: flex; align-items: center; justify-content: center; line-height: 1.4;">
         等待语音输入...
     </div>
-    <button id="v-action-btn" style="width: 100%; height: 60px; background-color: #00cc66; color: white; border: none; border-radius: 10px; font-size: 20px; cursor: pointer; font-weight: bold;">
+    
+    <button id="v-action-btn" style="width: 100%; height: 60px; background-color: #00cc66; color: white; border: none; border-radius: 10px; font-size: 20px; cursor: pointer; font-weight: bold; transition: 0.3s;">
         开始实时翻译
     </button>
+    
     <p id="v-status" style="color: #888; font-size: 14px; text-align: center; margin-top: 15px;">
         状态: 正在初始化引擎...
     </p>
 </div>
 
 <script type="module">
+    // 使用动态 import 确保在主页面环境加载
     import Vapi from 'https://esm.sh/@vapi-ai/web@2.5.2';
 
     const subBox = document.getElementById('subtitle-box');
     const status = document.getElementById('v-status');
     const btn = document.getElementById('v-action-btn');
 
-    async function startApp() {{
-        try {{
-            const vapi = new Vapi('{VAPI_PUBLIC_KEY}');
-            const ws = new WebSocket('{WSS_URL}');
+    let vapiInstance = null;
 
+    async function initApp() {{
+        try {{
+            vapiInstance = new Vapi('{VAPI_PUBLIC_KEY}');
+            
+            const ws = new WebSocket('{WSS_URL}');
             ws.onmessage = (e) => {{
-                const data = JSON.parse(e.data);
-                if (data.translation) subBox.innerText = data.translation;
+                try {{
+                    const data = JSON.parse(e.data);
+                    if (data.translation) subBox.innerText = data.translation;
+                }} catch(err) {{ console.error("WS解析错误", err); }}
             }};
 
-            vapi.on('call-start', () => {{
+            vapiInstance.on('call-start', () => {{
                 status.innerText = '🎙️ 正在录音翻译...';
                 btn.innerText = '停止翻译';
                 btn.style.backgroundColor = '#ff4b4b';
             }});
 
-            vapi.on('call-end', () => {{
+            vapiInstance.on('call-end', () => {{
                 status.innerText = '✅ 已结束';
                 btn.innerText = '开始实时翻译';
                 btn.style.backgroundColor = '#00cc66';
             }});
 
-            vapi.on('error', (err) => {{
-                status.innerText = '❌ 错误: ' + (err.message || '麦克风调用失败');
+            vapiInstance.on('error', (err) => {{
+                status.innerText = '❌ 错误: ' + (err.message || '麦克风权限被拒绝');
+                console.error("Vapi Error:", err);
             }});
 
             status.innerText = '✅ 引擎已就绪';
 
             btn.onclick = async () => {{
-                if (vapi.isCallActive()) {{
-                    vapi.stop();
+                if (vapiInstance.isCallActive()) {{
+                    vapiInstance.stop();
                 }} else {{
-                    status.innerText = '请求权限中...';
-                    await vapi.start('{VAPI_ASSISTANT_ID}');
+                    status.innerText = '正在请求麦克风权限...';
+                    try {{
+                        await vapiInstance.start('{VAPI_ASSISTANT_ID}');
+                    }} catch (e) {{
+                        status.innerText = '⚠️ 权限请求失败';
+                        console.error(e);
+                    }}
                 }}
             }};
         }} catch (e) {{
-            status.innerText = '⚠️ 无法启动: ' + e.message;
-            status.style.color = '#ff4b4b';
+            status.innerText = '⚠️ 无法初始化: ' + e.message;
+            console.error("Initialization Error:", e);
         }}
     }}
-    startApp();
+
+    // 延迟执行确保 DOM 加载完毕
+    setTimeout(initApp, 500);
 </script>
 """
 
-# --- 4. 使用组件渲染 (关键修改) ---
-# height 参数需要根据内容高度手动调整
-components.html(
-    injection_html, 
-    height=350, 
-    # 必须显式允许麦克风权限，否则 JavaScript 无法激活 Vapi 引擎
-    allow="microphone" 
-)
+# --- 4. 渲染 ---
+st.markdown(injection_html, unsafe_allow_html=True)
 
 st.write("---")
-st.caption("注：请确保通过 HTTPS 或 localhost 访问以获得麦克风权限。")
+st.caption("注：本地运行时请通过 http://localhost:8501 访问。如果依然无法点击，请检查 F12 Console 报错。")
