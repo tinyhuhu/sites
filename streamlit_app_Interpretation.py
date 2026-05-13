@@ -57,7 +57,7 @@ html_code = """
 </div>
 
 <script type="module">
-import Vapi from 'https://esm.sh/@vapi-ai/web@2.5.3';
+import Vapi from 'https://esm.sh/@vapi-ai/web@2.5.2';
 
 const display = document.getElementById('subtitle-display');
 const msg = document.getElementById('v-msg');
