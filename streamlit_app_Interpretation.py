@@ -12,7 +12,7 @@ VAPI_PUBLIC_KEY = "5f372b2b-5f3d-41b7-bd61-1522a5c35ff6"
 IOT_ENDPOINT = "a3pqsh1g7enzj8-ats.iot.us-east-2.amazonaws.com" 
 
 # 2. 嵌入修复后的 JavaScript 逻辑
-# 注意：在 f-string 中，所有的 JS 大括号必须写成双大括号 {{ }} 才能被 Python 正确忽略
+# 注意：这里使用了 f"""..."""，因此代码内部所有的 JS 大括号都已转义为 {{ }}
 st_html = f"""
 <div id="subtitle-box" style="background-color: #1a1a1a; color: #ffcc00; padding: 20px; border-radius: 10px; min-height: 120px;
 font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px; border: 2px solid #333;">
@@ -36,7 +36,7 @@ color: white; border: none; border-radius: 8px; font-size: 20px; cursor: pointer
     const Vapi = typeof VapiWeb === 'function' ? VapiWeb : VapiWeb.default;
     const vapi = new Vapi("{VAPI_PUBLIC_KEY}");
 
-    // --- 1. AWS IoT MQTT 增强版逻辑 ---
+    // --- 1. AWS IoT MQTT 逻辑 (已转义大括号) ---
     const clientId = "interpreter_" + Math.random().toString(16).substr(2, 8);
     const client = new Paho.MQTT.Client("wss://" + "{IOT_ENDPOINT}" + "/mqtt", clientId);
     
@@ -71,21 +71,26 @@ color: white; border: none; border-radius: 8px; font-size: 20px; cursor: pointer
 
     connectMQTT();
 
-    // --- 2. Vapi 控制逻辑 ---
+    // --- 2. Vapi 控制逻辑 (已转义大括号) ---
     startBtn.onclick = async () => {{
         if (startBtn.innerText === "开始实时翻译") {{
             try {{
-                await vapi.start({{ assistantId: "{VAPI_ASSISTANT_ID}" }});
+                // 解决 400 错误：明确对象参数
+                await vapi.start({{
+                    assistantId: "{VAPI_ASSISTANT_ID}"
+                }});
                 startBtn.innerText = "停止翻译";
                 startBtn.style.backgroundColor = "#ff4444";
                 subtitleBox.innerText = "正在聆听电影声音...";
             }} catch (err) {{
                 console.error("Vapi Error:", err);
+                alert("启动失败，请检查麦克风权限。");
             }}
         }} else {{
             vapi.stop();
             startBtn.innerText = "开始实时翻译";
             startBtn.style.backgroundColor = "#00cc66";
+            subtitleBox.innerText = "等待翻译中...";
         }}
     }};
 </script>
