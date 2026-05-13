@@ -7,11 +7,11 @@ st.set_page_config(
 )
 
 # ===== 配置 =====
-VAPI_ASSISTANT_ID = "585b5b56-9e7b-4c41-b369-693ce3256f85" [cite: 1]
-VAPI_PUBLIC_KEY = "5f372b2b-5f3d-41b7-bd61-1522a5c35ff6" [cite: 1]
-WSS_URL = "wss://un1qwkapg1.execute-api.us-east-2.amazonaws.com/production/" [cite: 1]
+VAPI_ASSISTANT_ID = "585b5b56-9e7b-4c41-b369-693ce3256f85" 
+VAPI_PUBLIC_KEY = "5f372b2b-5f3d-41b7-bd61-1522a5c35ff6" 
+WSS_URL = "wss://un1qwkapg1.execute-api.us-east-2.amazonaws.com/production/" 
 
-st.title("🎬 电影同声传译 (AI)") [cite: 1]
+st.title("🎬 电影同声传译 (AI)") 
 
 html_code = """
 <!DOCTYPE html>
@@ -30,7 +30,7 @@ html_code = """
 </div>
 
 <script type="module">
-import Vapi from 'https://esm.sh/@vapi-ai/web@2.5.2'; [cite: 5]
+import Vapi from 'https://esm.sh/@vapi-ai/web@2.5.2'; 
 
 const display = document.getElementById('subtitle-display');
 const msg = document.getElementById('v-msg');
@@ -39,21 +39,21 @@ const btn = document.getElementById('v-btn');
 let vapi = null;
 
 try {
-    vapi = new Vapi('__PUBLIC_KEY__'); [cite: 5]
-    msg.innerText = '✅ Vapi 已加载'; [cite: 5]
+    vapi = new Vapi('__PUBLIC_KEY__'); 
+    msg.innerText = '✅ Vapi 已加载'; 
 } catch(err) {
-    msg.innerText = '❌ Vapi 加载失败'; [cite: 5]
+    msg.innerText = '❌ Vapi 加载失败'; 
     console.error(err);
 }
 
-const ws = new WebSocket('__WSS_URL__'); [cite: 5]
-ws.onopen = () => { console.log("WebSocket 已连接"); }; [cite: 5]
+const ws = new WebSocket('__WSS_URL__'); 
+ws.onopen = () => { console.log("WebSocket 已连接"); }; 
 
 ws.onmessage = (e) => {
     try {
-        const d = JSON.parse(e.data); [cite: 6]
+        const d = JSON.parse(e.data); 
         if (d.translation) {
-            display.innerText = d.translation; [cite: 6]
+            display.innerText = d.translation; 
         }
     } catch(err) {
         console.error(err);
@@ -62,7 +62,7 @@ ws.onmessage = (e) => {
 
 btn.onclick = async () => {
     if (!vapi) {
-        msg.innerText = '❌ Vapi 未初始化'; [cite: 7]
+        msg.innerText = '❌ Vapi 未初始化'; 
         return;
     }
 
@@ -103,9 +103,9 @@ vapi.on('call-end', () => {
 # ===== 替换变量 =====
 html_code = (
     html_code
-    .replace("__PUBLIC_KEY__", VAPI_PUBLIC_KEY) [cite: 11]
-    .replace("__WSS_URL__", WSS_URL) [cite: 11]
-    .replace("__ASSISTANT_ID__", VAPI_ASSISTANT_ID) [cite: 11]
+    .replace("__PUBLIC_KEY__", VAPI_PUBLIC_KEY) 
+    .replace("__WSS_URL__", WSS_URL) 
+    .replace("__ASSISTANT_ID__", VAPI_ASSISTANT_ID) 
 )
 
 # ===== 渲染 HTML (增加关键的麦克风权限) =====
