@@ -20,15 +20,16 @@ WSS_URL = "wss://un1qwkapg1.execute-api.us-east-2.amazonaws.com/production/"
 
 # 注意：在 f"""...""" 中，所有的 JS 大括号必须写成 {{ }}
 st_html = f"""
-<script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web@2.5.2/+esm"></script>
-
 <div id="subtitle-box" style="background-color: #1a1a1a; color: #ffcc00; padding: 20px; border-radius: 10px; min-height: 120px; font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px; border: 2px solid #333;">
     等待翻译中...
 </div>
 <button id="start-btn" style="width: 100%; height: 60px; background-color: #00cc66; color: white; border: none; border-radius: 8px; font-size: 20px; cursor: pointer; font-weight: bold;">开始实时翻译</button>
-<p id="status-text" style="color: #888; font-size: 14px; text-align: center; margin-top: 10px;">连接状态: 初始化中...</p>
+<p id="status-text" style="color: #888; font-size: 14px; text-align: center; margin-top: 10px;">连接状态: 正在初始化...</p>
 
-<script>
+<script type="module">
+    // 1. 直接通过 ESM 导入 Vapi
+    import Vapi from 'https://cdn.jsdelivr.net/npm/@vapi-ai/web@2.5.2/+esm';
+
     const WSS_URL = "wss://un1qwkapg1.execute-api.us-east-2.amazonaws.com/production/"; 
     const VAPI_PUBLIC_KEY = "{VAPI_PUBLIC_KEY}";
     const VAPI_ASSISTANT_ID = "{VAPI_ASSISTANT_ID}";
@@ -37,9 +38,10 @@ st_html = f"""
     const statusText = document.getElementById('status-text');
     const startBtn = document.getElementById('start-btn');
 
-    let vapiInstance = null;
+    // 2. 初始化 Vapi 实例
+    const vapi = new Vapi(VAPI_PUBLIC_KEY);
 
-    // 2. WebSocket 连接 (保持不变)
+    // 3. WebSocket 连接
     const ws = new WebSocket(WSS_URL);
     ws.onopen = () => {{
         statusText.innerText = "✅ 已通过 API Gateway 连接";
@@ -52,39 +54,25 @@ st_html = f"""
         }}
     }};
 
-    // 3. 简化初始化：循环尝试直到 SDK 挂载
-    const initVapi = setInterval(() => {{
-        const VapiClass = window.Vapi || window.VapiWeb;
-        if (VapiClass) {{
-            vapiInstance = new VapiClass(VAPI_PUBLIC_KEY);
-            console.log("Vapi SDK 挂载成功");
-            
-            vapiInstance.on('call-start', () => {{
-                statusText.innerText = "🎙️ 正在监听并实时翻译...";
-                statusText.style.color = "#ffcc00";
-            }});
-            vapiInstance.on('call-end', () => {{
-                statusText.innerText = "✅ 已通过 API Gateway 连接";
-                statusText.style.color = "#00cc66";
-            }});
-            
-            clearInterval(initVapi); // 初始化成功后停止循环
-        }}
-    }}, 500);
+    // 4. 绑定 Vapi 事件
+    vapi.on('call-start', () => {{
+        statusText.innerText = "🎙️ 正在监听并实时翻译...";
+        statusText.style.color = "#ffcc00";
+    }});
 
-    // 4. 按钮逻辑
+    vapi.on('call-end', () => {{
+        statusText.innerText = "✅ 已通过 API Gateway 连接";
+        statusText.style.color = "#00cc66";
+    }});
+
+    // 5. 按钮控制
     startBtn.addEventListener('click', () => {{
-        if (!vapiInstance) {{
-            alert("Vapi SDK 还在努力加载中，请稍后几秒...");
-            return;
-        }}
-        
         if (startBtn.innerText === "开始实时翻译") {{
-            vapiInstance.start(VAPI_ASSISTANT_ID);
+            vapi.start(VAPI_ASSISTANT_ID);
             startBtn.innerText = "停止翻译";
             startBtn.style.backgroundColor = "#ff4b4b";
         }} else {{
-            vapiInstance.stop();
+            vapi.stop();
             startBtn.innerText = "开始实时翻译";
             startBtn.style.backgroundColor = "#00cc66";
         }}
