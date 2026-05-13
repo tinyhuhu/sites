@@ -32,10 +32,14 @@ st_html = f"""
     // --- 1. AWS IoT MQTT 设置 ---
     const client = new Paho.MQTT.Client("wss://" + "{IOT_ENDPOINT}" + "/mqtt", "clientId-" + Math.random());
     
-    client.onMessageArrived = function(message) {{
+    // 修改第 26 行左右的逻辑
+    client.onMessageArrived = function(message) {
         const data = JSON.parse(message.payloadString);
-        subtitleBox.innerHTML = data.translation; // 更新显示中文
-    }};
+        subtitleBox.innerHTML = `
+            <div style="font-size: 16px; color: #888; margin-bottom: 5px;">${data.original}</div>
+            <div>${data.translation}</div>
+        `;
+    };
 
     client.connect({{
         useSSL: true,
