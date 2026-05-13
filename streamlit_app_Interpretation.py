@@ -13,14 +13,16 @@ IOT_ENDPOINT = "a3pqsh1g7enzj8-ats.iot.us-east-2.amazonaws.com" # 从 AWS IoT �
 
 # 2. 嵌入 JavaScript 代码
 # 这部分代码处理两件事：1. 启动 Vapi 录音；2. 订阅 AWS IoT 消息显示在屏幕上
+# 2. 嵌入 JavaScript 代码
 st_html = f"""
-<div id="subtitle-box" style="background-color: #1a1a1a; color: #ffcc00; padding: 20px; border-radius: 10px; min-height: 100px; font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px;">
+<div id="subtitle-box" style="background-color: #1a1a1a; color: #ffcc00; padding: 20px; border-radius: 10px; min-height: 100px;
+font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px;">
     等待翻译中...
 </div>
 
-<button id="start-btn" style="width: 100%; height: 50px; background-color: #00cc66; color: white; border: none; border-radius: 5px; font-size: 18px;">开始实时翻译</button>
+<button id="start-btn" style="width: 100%; height: 50px; background-color: #00cc66;
+color: white; border: none; border-radius: 5px; font-size: 18px;">开始实时翻译</button>
 
-<!-- 引入 SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web@latest/dist/vapi-sdk.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
 
@@ -30,16 +32,17 @@ st_html = f"""
     const subtitleBox = document.getElementById('subtitle-box');
 
     // --- 1. AWS IoT MQTT 设置 ---
+    // 注意：这里使用了双大括号来转义
     const client = new Paho.MQTT.Client("wss://" + "{IOT_ENDPOINT}" + "/mqtt", "clientId-" + Math.random());
     
-    // 修改第 26 行左右的逻辑
-    client.onMessageArrived = function(message) {
+    client.onMessageArrived = function(message) {{
         const data = JSON.parse(message.payloadString);
+        // 在 f-string 中，JS 的 ${{ }} 变量占位符需要写成 ${{{{ }}}} 才能正确还原
         subtitleBox.innerHTML = `
-            <div style="font-size: 16px; color: #888; margin-bottom: 5px;">${data.original}</div>
-            <div>${data.translation}</div>
+            <div style="font-size: 16px; color: #888; margin-bottom: 5px;">${{data.original}}</div>
+            <div>${{data.translation}}</div>
         `;
-    };
+    }};
 
     client.connect({{
         useSSL: true,
@@ -53,7 +56,7 @@ st_html = f"""
     // --- 2. Vapi 控制 ---
     startBtn.onclick = () => {{
         if (startBtn.innerText === "开始实时翻译") {{
-            vapi.start("{VAPI_ASSISTANT_ID}"); // 替换为你 Vapi 的 Assistant ID
+            vapi.start("{VAPI_ASSISTANT_ID}");
             startBtn.innerText = "停止";
             startBtn.style.backgroundColor = "#ff4444";
         }} else {{
