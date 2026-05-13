@@ -50,15 +50,18 @@ st_html = f"""
         const host = endpoint.toLowerCase();
         const path = '/mqtt';
         
+        // 在构建 queryParams 数组时
         const queryParams = [
             'X-Amz-Algorithm=AWS4-HMAC-SHA256',
             'X-Amz-Credential=' + encodeURIComponent(credentials.accessKeyId + '/' + date + '/' + region + '/' + service + '/aws4_request'),
             'X-Amz-Date=' + time,
             'X-Amz-SignedHeaders=host'
         ];
-        if (credentials.sessionToken) {{
+
+        // !!! 必须加入这一段，否则 403 报错 !!!
+        if (credentials.sessionToken) {
             queryParams.push('X-Amz-Security-Token=' + encodeURIComponent(credentials.sessionToken));
-        }}
+        }
         
         const canonicalQuerystring = queryParams.sort().join('&');
         const canonicalRequest = method + '\\n' + path + '\\n' + canonicalQuerystring + '\\n' + 'host:' + host + '\\n\\n' + 'host' + '\\n' + CryptoJS.SHA256('').toString();
