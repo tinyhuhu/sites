@@ -92,7 +92,8 @@ st_html = f"""
 # 如果升级 Streamlit 失败，请删掉 allow="microphone"，仅保留核心功能测试
 # 如果版本太低，这行会抛出 TypeError
 try:
-    components.html(st_html, height=600, allow="microphone")
+    #components.html(st_html, height=600, allow="microphone")
+    st.html(f"<div style='display:none;'>渲染容器</div>{st_html}")
 except TypeError:
     # 兼容低版本 Streamlit
     components.html(st_html, height=600)
