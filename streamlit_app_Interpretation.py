@@ -1,0 +1,63 @@
+import streamlit as st
+import streamlit.components.v1 as components
+
+st.set_page_config(page_title="Movie AI Translator", layout="centered")
+
+st.title("🎬 电影同声传译 (AI)")
+st.info("手机请靠近音箱，点击开始后将实时显示中文翻译。")
+
+# 1. 配置区域
+VAPI_PUBLIC_KEY = "你的_VAPI_PUBLIC_KEY"
+IOT_ENDPOINT = "你的_AWS_IOT_ENDPOINT" # 从 AWS IoT 设置中获取
+
+# 2. 嵌入 JavaScript 代码
+# 这部分代码处理两件事：1. 启动 Vapi 录音；2. 订阅 AWS IoT 消息显示在屏幕上
+st_html = f"""
+<div id="subtitle-box" style="background-color: #1a1a1a; color: #ffcc00; padding: 20px; border-radius: 10px; min-height: 100px; font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px;">
+    等待翻译中...
+</div>
+
+<button id="start-btn" style="width: 100%; height: 50px; background-color: #00cc66; color: white; border: none; border-radius: 5px; font-size: 18px;">开始实时翻译</button>
+
+<!-- 引入 SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web@latest/dist/vapi-sdk.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+
+<script>
+    const vapi = new Vapi("{VAPI_PUBLIC_KEY}");
+    const startBtn = document.getElementById('start-btn');
+    const subtitleBox = document.getElementById('subtitle-box');
+
+    // --- 1. AWS IoT MQTT 设置 ---
+    const client = new Paho.MQTT.Client("wss://" + "{IOT_ENDPOINT}" + "/mqtt", "clientId-" + Math.random());
+    
+    client.onMessageArrived = function(message) {{
+        const data = JSON.parse(message.payloadString);
+        subtitleBox.innerHTML = data.translation; // 更新显示中文
+    }};
+
+    client.connect({{
+        useSSL: true,
+        timeout: 3,
+        onSuccess: function() {{
+            client.subscribe("movie/subtitle");
+            console.log("MQTT Subscribed");
+        }}
+    }});
+
+    // --- 2. Vapi 控制 ---
+    startBtn.onclick = () => {{
+        if (startBtn.innerText === "开始实时翻译") {{
+            vapi.start("YOUR_ASSISTANT_ID"); // 替换为你 Vapi 的 Assistant ID
+            startBtn.innerText = "停止";
+            startBtn.style.backgroundColor = "#ff4444";
+        }} else {{
+            vapi.stop();
+            startBtn.innerText = "开始实时翻译";
+            startBtn.style.backgroundColor = "#00cc66";
+        }}
+    }};
+</script>
+"""
+
+components.html(st_html, height=400)
