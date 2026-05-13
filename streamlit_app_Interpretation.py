@@ -59,9 +59,9 @@ st_html = f"""
         ];
 
         // !!! 必须加入这一段，否则 403 报错 !!!
-        if (credentials.sessionToken) {
+        if (credentials.sessionToken) {{
             queryParams.push('X-Amz-Security-Token=' + encodeURIComponent(credentials.sessionToken));
-        }
+        }}
         
         const canonicalQuerystring = queryParams.sort().join('&');
         const canonicalRequest = method + '\\n' + path + '\\n' + canonicalQuerystring + '\\n' + 'host:' + host + '\\n\\n' + 'host' + '\\n' + CryptoJS.SHA256('').toString();
