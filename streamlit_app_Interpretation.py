@@ -85,6 +85,7 @@ st_html = f"""
             }}
 
             const signedUrl = getSignedUrl(IOT_ENDPOINT, REGION, AWS.config.credentials);
+            console.log(signedUrl)
             const clientId = 'client-' + Math.random().toString(16).substr(2, 8);
             const client = new Paho.MQTT.Client(signedUrl, clientId);
 
