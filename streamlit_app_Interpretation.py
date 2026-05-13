@@ -130,19 +130,6 @@ try {
     console.error('WebSocket 初始化失败:', err);
 }
 
-
-try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    console.log('麦克风 Mic stream OK:', stream);
-    stream.getTracks().forEach(track => track.stop());
-} catch (micErr) {
-    console.error('Mic permission failed:', micErr);
-    msg.innerText = '❌ 浏览器没有拿到麦克风权限';
-    return;
-}
-
-await vapi.start('__ASSISTANT_ID__');
-
 btn.onclick = async () => {
     if (!vapi) {
         msg.innerText = '❌ Vapi 未初始化';
@@ -153,10 +140,24 @@ btn.onclick = async () => {
         if (isActive) {
             vapi.stop();
             setIdle();
-        } else {
-            msg.innerText = '🎙️ 正在请求麦克风权限...';
-            await vapi.start('__ASSISTANT_ID__');
+            return;
         }
+
+        msg.innerText = '🎙️ 正在请求麦克风权限...';
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            console.log('麦克风 Mic stream OK:', stream);
+            stream.getTracks().forEach(track => track.stop());
+        } catch (micErr) {
+            console.error('Mic permission failed:', micErr);
+            msg.innerText = '❌ 浏览器没有拿到麦克风权限';
+            return;
+        }
+
+        msg.innerText = '🎙️ 正在连接 Vapi...';
+        await vapi.start('__ASSISTANT_ID__');
+
     } catch (err) {
         console.error('启动/停止失败:', err);
         msg.innerText = '❌ 启动失败：请检查麦克风权限、Assistant ID、Public Key';
