@@ -92,7 +92,7 @@ injection_html = f"""
 """
 
 # --- 4. 渲染 (确保使用 unsafe_allow_html=True) ---
-st.markdown(injection_html, unsafe_allow_html=True) [cite: 27, 28]
+st.markdown(injection_html, unsafe_allow_html=True) 
 
 st.write("---")
 st.caption("注：如果本地运行，请确保访问地址为 http://localhost:8501")
