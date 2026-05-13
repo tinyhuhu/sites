@@ -7,7 +7,7 @@ st.title("🎬 电影同声传译 (AI)")
 st.info("手机请靠近音箱，点击开始后将实时显示中文翻译。")
 
 # 1. 配置区域
-VAPI_ASSISTANT_ID = "585b5b56-9e7b-4c41-b369-693ce3256f85"
+VAPI_ASSISTANT_ID = "585b5b56-9e7b-4c41-b369-693ce3256f85a"
 VAPI_PUBLIC_KEY = "5f372b2b-5f3d-41b7-bd61-1522a5c35ff6"
 IOT_ENDPOINT = "你的_AWS_IOT_ENDPOINT" # 从 AWS IoT 设置中获取
 
