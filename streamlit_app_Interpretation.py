@@ -9,7 +9,7 @@ st.info("手机请靠近音箱，点击开始后将实时显示中文翻译。")
 # 1. 配置区域
 VAPI_ASSISTANT_ID = "585b5b56-9e7b-4c41-b369-693ce3256f85a"
 VAPI_PUBLIC_KEY = "5f372b2b-5f3d-41b7-bd61-1522a5c35ff6"
-IOT_ENDPOINT = "你的_AWS_IOT_ENDPOINT" # 从 AWS IoT 设置中获取
+IOT_ENDPOINT = "a3pqsh1g7enzj8-ats.iot.us-east-2.amazonaws.com" # 从 AWS IoT 设置中获取
 
 # 2. 嵌入 JavaScript 代码
 # 这部分代码处理两件事：1. 启动 Vapi 录音；2. 订阅 AWS IoT 消息显示在屏幕上
