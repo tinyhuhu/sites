@@ -89,22 +89,13 @@ st_html = f"""
 </script>
 """
 
-# 如果升级 Streamlit 失败，请删掉 allow="microphone"，仅保留核心功能测试
-# 如果版本太低，这行会抛出 TypeError
 try:
-    #components.html(st_html, height=600, allow="microphone")
+    # 这种方式不会创建沙箱化的 iframe，麦克风和通信权限更高
+    st.html(f"<div style='display:none;'>渲染容器</div>{st_html}")
+except AttributeError:
+    # 如果 Streamlit 版本不支持 st.html，则退回到 components 方案并加强权限
     components.html(
         st_html, 
         height=600, 
         scrolling=False
     )
-    #st.html(f"<div style='display:none;'>渲染容器</div>{st_html}")
-except TypeError:
-    # 兼容低版本 Streamlit
-    #components.html(st_html, height=600)
-    components.html(
-        st_html, 
-        height=600, 
-        scrolling=False
-    )
-    #st.html(f"<div style='display:none;'>渲染容器</div>{st_html}")
