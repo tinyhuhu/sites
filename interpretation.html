@@ -200,8 +200,11 @@
             */
             // 完整翻译
             if (data.type === "translation") {
-              currentSubtitle = data.text;
-              subtitle.textContent = currentSubtitle;
+              if (data.isFinal) {
+                subtitle.textContent = data.text;
+              } else {
+                subtitle.textContent = data.text + " ...";
+              }
               return;
             }
 
