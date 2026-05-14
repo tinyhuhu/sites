@@ -122,6 +122,8 @@
     let ws = null;
     let isActive = false;
     let currentSubtitle = "";
+    let latestEnglish = "";
+    let latestChinese = "";
 
     // 前端唯一 session id
     const sessionId = crypto.randomUUID();
@@ -200,14 +202,17 @@
             */
             // 完整翻译
             if (data.type === "translation") {
+              latestChinese = data.text;
+            
               if (data.isFinal) {
-                currentSubtitle = data.text;
+                currentSubtitle = latestChinese;
                 subtitle.textContent = currentSubtitle;
                 subtitle.style.opacity = "1";
               } else {
-                subtitle.textContent = data.text + " ...";
-                subtitle.style.opacity = "0.75";
+                subtitle.textContent = latestChinese + " ...";
+                subtitle.style.opacity = "0.85";
               }
+            
               return;
             }
 
@@ -273,6 +278,20 @@
       // 调试 transcript/message
       vapi.on("message", (msg) => {
         console.log("Vapi message:", msg);
+      
+        if (msg.type === "transcript" && msg.role === "user") {
+          latestEnglish = msg.transcript || "";
+      
+          if (msg.transcriptType === "partial") {
+            subtitle.style.opacity = "0.65";
+            subtitle.textContent = "正在听取并翻译...\n\n" + latestEnglish;
+          }
+      
+          if (msg.transcriptType === "final") {
+            subtitle.style.opacity = "0.75";
+            subtitle.textContent = "正在翻译...\n\n" + latestEnglish;
+          }
+        }
       });
 
       setStatus("Vapi 已加载");
