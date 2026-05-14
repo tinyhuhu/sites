@@ -201,9 +201,12 @@
             // 完整翻译
             if (data.type === "translation") {
               if (data.isFinal) {
-                subtitle.textContent = data.text;
+                currentSubtitle = data.text;
+                subtitle.textContent = currentSubtitle;
+                subtitle.style.opacity = "1";
               } else {
                 subtitle.textContent = data.text + " ...";
+                subtitle.style.opacity = "0.75";
               }
               return;
             }
