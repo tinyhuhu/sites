@@ -28,9 +28,9 @@ with st.sidebar:
     
     st.divider()
     st.subheader("🔒 AWS 认证凭证")
-    aws_access_key = st.text_input("AWS Access Key ID", type="password")
-    aws_secret_key = st.text_input("AWS Secret Access Key", type="password")
-    aws_region = st.text_input("AWS Region", value="us-east-1")
+    #aws_access_key = st.text_input("AWS Access Key ID", type="password")
+    #aws_secret_key = st.text_input("AWS Secret Access Key", type="password")
+    
     
     if st.button("🗑️ 清空历史对话", use_container_width=True):
         st.session_state.messages = []
@@ -83,68 +83,66 @@ if prompt_input:
         
         # --- 6. 后端模型调用 (Bedrock Converse API) ---
         with st.chat_message("assistant"):
-            if not (aws_access_key and aws_secret_key):
-                st.warning("⚠️ 请先在左侧边栏配置 AWS 凭证。")
-            else:
-                response_placeholder = st.empty()
-                full_response = ""
-                st.caption(f"正在通过 Bedrock ({selected_model_label}) 生成回复...")
+            response_placeholder = st.empty()
+            full_response = ""
+            st.caption(f"正在通过 Bedrock ({selected_model_label}) 生成回复...")
+            
+            try:
+                # 初始化 Bedrock 客户端
+                bedrock_client = boto3.client(
+                    service_name='bedrock-runtime',
+                    region_name='us-east-2',
+                    aws_access_key_id=st.secrets["AWS_ACCESS_KEY_ID"],
+                    aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"]
+                    #aws_region = st.text_input("AWS Region", value="us-east-1")
+                )
                 
-                try:
-                    # 初始化 Bedrock 客户端
-                    bedrock_client = boto3.client(
-                        service_name='bedrock-runtime',
-                        region_name=aws_region,
-                        aws_access_key_id=aws_access_key,
-                        aws_secret_access_key=aws_secret_key
-                    )
-                    
-                    # 构造 Bedrock Converse API 所需的 messages 格式
-                    bedrock_contents = []
-                    
-                    # 1. 添加上传的文件/图片
-                    for file in uploaded_files_data:
-                        if file["type"].startswith("image/"):
-                            # 提取纯格式名，例如 'jpeg' 或 'png'
-                            img_format = file["type"].split("/")[-1]
-                            if img_format == "jpg": img_format = "jpeg"
-                            bedrock_contents.append({
-                                "image": {
-                                    "format": img_format,
-                                    "source": {"bytes": file["bytes"]}
-                                }
-                            })
-                        elif file["type"] == "application/pdf":
-                            bedrock_contents.append({
-                                "document": {
-                                    "format": "pdf",
-                                    "name": file["name"].split(".")[0][:20], # 限制名字长度
-                                    "source": {"bytes": file["bytes"]}
-                                }
-                            })
-                    
-                    # 2. 添加文本 Prompt (文本块必须跟在多模态块后面或一同组织)
-                    if user_text:
-                        bedrock_contents.append({"text": user_text})
-                    
-                    # 封装单次请求消息
-                    messages_payload = [{"role": "user", "content": bedrock_contents}]
-                    
-                    # 调用 Bedrock 流式对话 API
-                    response = bedrock_client.converse_stream(
-                        modelId=bedrock_model_id,
-                        messages=messages_payload
-                    )
-                    
-                    # 解析流式数据块
-                    for chunk in response.get('stream'):
-                        if 'contentBlockDelta' in chunk:
-                            text_chunk = chunk['contentBlockDelta']['delta']['text']
-                            full_response += text_chunk
-                            response_placeholder.markdown(full_response + "▌")
-                            
-                    response_placeholder.markdown(full_response)
-                    st.session_state.messages.append({"role": "assistant", "content": full_response})
-                    
-                except Exception as e:
-                    st.error(f"调用 AWS Bedrock 时发生错误: {str(e)}")
+                # 构造 Bedrock Converse API 所需的 messages 格式
+                bedrock_contents = []
+                
+                # 1. 添加上传的文件/图片
+                for file in uploaded_files_data:
+                    if file["type"].startswith("image/"):
+                        # 提取纯格式名，例如 'jpeg' 或 'png'
+                        img_format = file["type"].split("/")[-1]
+                        if img_format == "jpg": img_format = "jpeg"
+                        bedrock_contents.append({
+                            "image": {
+                                "format": img_format,
+                                "source": {"bytes": file["bytes"]}
+                            }
+                        })
+                    elif file["type"] == "application/pdf":
+                        bedrock_contents.append({
+                            "document": {
+                                "format": "pdf",
+                                "name": file["name"].split(".")[0][:20], # 限制名字长度
+                                "source": {"bytes": file["bytes"]}
+                            }
+                        })
+                
+                # 2. 添加文本 Prompt (文本块必须跟在多模态块后面或一同组织)
+                if user_text:
+                    bedrock_contents.append({"text": user_text})
+                
+                # 封装单次请求消息
+                messages_payload = [{"role": "user", "content": bedrock_contents}]
+                
+                # 调用 Bedrock 流式对话 API
+                response = bedrock_client.converse_stream(
+                    modelId=bedrock_model_id,
+                    messages=messages_payload
+                )
+                
+                # 解析流式数据块
+                for chunk in response.get('stream'):
+                    if 'contentBlockDelta' in chunk:
+                        text_chunk = chunk['contentBlockDelta']['delta']['text']
+                        full_response += text_chunk
+                        response_placeholder.markdown(full_response + "▌")
+                        
+                response_placeholder.markdown(full_response)
+                st.session_state.messages.append({"role": "assistant", "content": full_response})
+                
+            except Exception as e:
+                st.error(f"调用 AWS Bedrock 时发生错误: {str(e)}")
