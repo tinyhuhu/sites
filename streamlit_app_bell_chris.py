@@ -17,10 +17,13 @@ with st.sidebar:
     st.header("⚙️ AWS Bedrock 配置")
     
     # 模拟你需要的模型列表（映射到 Bedrock 的 Model ID）
-    model_mapping = {
-        "Claude 3.5 Sonnet": "anthropic.claude-3-5-sonnet-20240620-v1:0",
-        "Claude 3 Opus": "anthropic.claude-3-opus-20240229-v1:0",
-        "Claude 3 Haiku": "anthropic.claude-3-haiku-20240307-v1:0"
+    model_mapping = { 
+        "Google Gemma-3": "google.gemma-3-12b-it",
+        "GPT OSS Safeguard": "openai.gpt-oss-safeguard-120b",
+        "Deepseek 3.2": "deepseek.v3.2",
+        "Claude Haiku 4.5": "anthropic.claude-haiku-4-5-20251001-v1:0",
+        "Claude Sonnet 4.6": "anthropic.claude-sonnet-4-6",
+        "Claude Opus 4.7": "anthropic.claude-opus-4-7"
     }
     
     selected_model_label = st.selectbox("选择 Bedrock 模型", list(model_mapping.keys()))
