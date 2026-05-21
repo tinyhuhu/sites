@@ -27,7 +27,7 @@ with st.sidebar:
     bedrock_model_id = model_mapping[selected_model_label]
     
     st.divider()
-    st.subheader("🔒 AWS 认证凭证")
+    #st.subheader("🔒 AWS 认证凭证")
     #aws_access_key = st.text_input("AWS Access Key ID", type="password")
     #aws_secret_key = st.text_input("AWS Secret Access Key", type="password")
     
