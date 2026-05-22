@@ -21,7 +21,7 @@ MAX_TEXT_FILE_CHARS_FOR_MEMORY = 20000
 # =========================
 
 st.set_page_config(
-    page_title="Bedrock Multi-LLM Chatbot",
+    page_title="AWS Multi-mode LLM - Chris",
     page_icon="☁️",
     layout="wide"
 )
