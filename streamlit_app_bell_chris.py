@@ -26,7 +26,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("☁️ LLM Test Lab on AWS Bedrock - Chris")
+st.title("☁️ Multi-mode LLM Test Lab - Chris")
 #st.caption("前端采用 Streamlit，后端通过 boto3 直接调用 AWS Bedrock 基座模型并具备强健的流式容错解析。")
 
 
