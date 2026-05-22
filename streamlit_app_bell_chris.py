@@ -32,8 +32,8 @@ with st.sidebar:
         "Claude Haiku 4.5": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
         "Claude Sonnet 4.6": "us.anthropic.claude-sonnet-4-6",
 
-        # 你的账号当前还没有 Opus 4.7 权限，先保留但会在报错时友好提示
-        "Claude Opus 4.7（需 AWS 账号开通）": "us.anthropic.claude-opus-4-7",
+        # 当前你的 AWS Account 还没有 Opus 4.7 权限，保留但会在报错时友好提示
+        #"Claude Opus 4.7（需 AWS 账号开通）": "us.anthropic.claude-opus-4-7",
     }
 
     selected_model_label = st.selectbox(
@@ -107,10 +107,14 @@ if prompt_input:
         # --- 6. 调用 Bedrock ConverseStream API ---
         with st.chat_message("assistant"):
             response_placeholder = st.empty()
+            status_placeholder = st.empty()
+            model_id_placeholder = st.empty()
+
             full_response = ""
 
-            st.caption(f"正在通过 Bedrock ({selected_model_label}) 生成回复...")
-            st.caption(f"当前实际调用的 modelId: `{bedrock_model_id}`")
+            # 这里使用 placeholder，后面可以动态更新文字
+            status_placeholder.caption(f"正在通过 Bedrock ({selected_model_label}) 生成回复...")
+            model_id_placeholder.caption(f"当前实际调用的 modelId: `{bedrock_model_id}`")
 
             try:
                 # 初始化 Bedrock Runtime 客户端
@@ -166,7 +170,7 @@ if prompt_input:
                             }
                         })
 
-                    # 处理 TXT：核心修复点
+                    # 处理 TXT：把文本内容直接塞进 text block
                     elif file_type == "text/plain" or file_name_lower.endswith(".txt"):
                         text_content = file_bytes.decode("utf-8", errors="replace")
 
@@ -264,7 +268,14 @@ if prompt_input:
                         except Exception:
                             pass
 
+                # 最终渲染完整回复，去掉光标
                 response_placeholder.markdown(full_response)
+
+                # 生成完成后，更新状态文字
+                status_placeholder.caption(f"✅ Bedrock ({selected_model_label}) 回复完成")
+
+                # 如果你不想最终用户看到 modelId，可以取消下一行注释
+                # model_id_placeholder.empty()
 
                 st.session_state.messages.append({
                     "role": "assistant",
@@ -273,6 +284,9 @@ if prompt_input:
 
             except Exception as e:
                 error_text = str(e)
+
+                # 出错时，也更新状态文字
+                status_placeholder.caption(f"❌ Bedrock ({selected_model_label}) 回复失败")
 
                 if (
                     "not available for this account" in error_text
