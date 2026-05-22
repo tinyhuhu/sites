@@ -7,7 +7,7 @@ import boto3
 # --- 1. 页面基本配置 ---
 st.set_page_config(page_title="Bedrock Multi-LLM Chatbot", page_icon="☁️", layout="wide")
 st.title("☁️ AWS Bedrock 多模态对话系统")
-st.caption("前端采用 Streamlit，后端通过 boto3 直接调用 AWS Bedrock 基座模型并动态注入系统时间。")
+st.caption("前端采用 Streamlit，后端通过 boto3 直接调用 AWS Bedrock 基座模型并具备强健的流式容错解析。")
 
 # --- 2. 初始化 Session State (维护聊天记录) ---
 if "messages" not in st.session_state:
@@ -102,7 +102,6 @@ if prompt_input:
                 # 1. 添加上传的文件/图片
                 for file in uploaded_files_data:
                     if file["type"].startswith("image/"):
-                        # 提取纯格式名，例如 'jpeg' 或 'png'
                         img_format = file["type"].split("/")[-1]
                         if img_format == "jpg": img_format = "jpeg"
                         bedrock_contents.append({
@@ -115,19 +114,19 @@ if prompt_input:
                         bedrock_contents.append({
                             "document": {
                                 "format": "pdf",
-                                "name": file["name"].split(".")[0][:20], # 限制名字长度
+                                "name": file["name"].split(".")[0][:20], 
                                 "source": {"bytes": file["bytes"]}
                             }
                         })
                 
-                # 2. 添加文本 Prompt (文本块必须跟在多模态块后面或一同组织)
+                # 2. 添加文本 Prompt
                 if user_text:
                     bedrock_contents.append({"text": user_text})
                 
                 # 封装单次请求消息
                 messages_payload = [{"role": "user", "content": bedrock_contents}]
                 
-                # ==================== ✨ 新增：动态注入当前系统时间 ====================
+                # 动态注入当前系统时间
                 now = datetime.datetime.now()
                 weekdays = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]
                 current_time_string = f"当前准确的系统时间是：{now.strftime('%Y年%m月%d日')}，{weekdays[now.weekday()]}。"
@@ -137,21 +136,35 @@ if prompt_input:
                         "text": f"你是一个部署在企业生产环境中的 AI 助手。请务必基于以下给出的时间事实，来准确回答用户关于今天、明天、日期或星期几的询问。{current_time_string}"
                     }
                 ]
-                # ====================================================================
                 
-                # 调用 Bedrock 流式对话 API (增加了 system 参数)
+                # 调用 Bedrock 流式对话 API
                 response = bedrock_client.converse_stream(
                     modelId=bedrock_model_id,
                     messages=messages_payload,
-                    system=system_prompts  # <-- ✨ 核心修复：把时间传入系统级提示词
+                    system=system_prompts
                 )
                 
-                # 解析流式数据块
-                for chunk in response.get('stream'):
+                # ==================== ✨ 核心修复：强健的流式安全解析 ====================
+                for chunk in response.get('stream', []):
+                    # 1. 兼容标准官方 Converse API 返回结构
                     if 'contentBlockDelta' in chunk:
-                        text_chunk = chunk['contentBlockDelta']['delta']['text']
-                        full_response += text_chunk
-                        response_placeholder.markdown(full_response + "▌")
+                        delta = chunk['contentBlockDelta'].get('delta', {})
+                        text_chunk = delta.get('text', '') # 使用 .get 防止 KeyError
+                        if text_chunk:
+                            full_response += text_chunk
+                            response_placeholder.markdown(full_response + "▌")
+                    
+                    # 2. 兼容自定义中转网关可能直接返回原生 chunk 字节流的结构
+                    elif 'chunk' in chunk:
+                        try:
+                            bytes_data = chunk['chunk'].get('bytes', b'')
+                            text_chunk = bytes_data.decode('utf-8')
+                            if text_chunk:
+                                full_response += text_chunk
+                                response_placeholder.markdown(full_response + "▌")
+                        except Exception:
+                            pass
+                # ====================================================================
                         
                 response_placeholder.markdown(full_response)
                 st.session_state.messages.append({"role": "assistant", "content": full_response})
