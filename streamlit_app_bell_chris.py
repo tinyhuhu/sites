@@ -414,7 +414,7 @@ if prompt_input:
                 response_placeholder.markdown(full_response)
 
                 # 更新状态
-                status_placeholder.caption(f"✅ Bedrock ({selected_model_label}) 回复完成")
+                status_placeholder.caption(f"✅ Bedrock ({selected_model_label}) execution complete.")
 
                 # 不想给最终用户看到 modelId 的话，保留这一行
                 # 想继续调试就注释掉这一行
