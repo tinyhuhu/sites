@@ -351,13 +351,13 @@ if prompt_input:
                 # 动态注入当前系统时间
                 now = datetime.datetime.now()
                 weekdays = [
-                    "星期一",
-                    "星期二",
-                    "星期三",
-                    "星期四",
-                    "星期五",
-                    "星期六",
-                    "星期日"
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday",
+                    "Sunday"
                 ]
 
                 current_time_string = (
@@ -375,7 +375,8 @@ if prompt_input:
                             "如果用户说“这个”“它”“刚才那个”“上面的问题”，"
                             "通常是在指代前文中的内容。"
                             "请务必基于以下给出的时间事实，"
-                            "来准确回答用户关于今天、明天、日期或星期几的询问。"
+                            "来准确回答用户关于今天、明天、日期或星期几的询问，"
+                            "用英语"
                             f"{current_time_string}"
                         )
                     }
@@ -441,9 +442,6 @@ if prompt_input:
                 ):
                     st.error(
                         "Claude Opus 4.7 当前未对这个 AWS Account 开放。"
-                        "Haiku/Sonnet 可用说明代码链路正常；"
-                        "请从 Bedrock Playground 测试 Opus 4.7，"
-                        "或联系 AWS Support/Sales 开通账号级访问。"
                     )
                 else:
                     st.error(f"调用 AWS Bedrock 时发生错误: {error_text}")
