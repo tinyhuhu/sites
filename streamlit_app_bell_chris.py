@@ -1,12 +1,13 @@
 import streamlit as st
 import json
+import datetime
 # 请确保安装了 boto3：pip install boto3
 import boto3
 
 # --- 1. 页面基本配置 ---
 st.set_page_config(page_title="Bedrock Multi-LLM Chatbot", page_icon="☁️", layout="wide")
 st.title("☁️ AWS Bedrock 多模态对话系统")
-st.caption("前端采用 Streamlit，后端通过 boto3 直接调用 AWS Bedrock 基座模型。")
+st.caption("前端采用 Streamlit，后端通过 boto3 直接调用 AWS Bedrock 基座模型并动态注入系统时间。")
 
 # --- 2. 初始化 Session State (维护聊天记录) ---
 if "messages" not in st.session_state:
@@ -30,10 +31,6 @@ with st.sidebar:
     bedrock_model_id = model_mapping[selected_model_label]
     
     st.divider()
-    #st.subheader("🔒 AWS 认证凭证")
-    #aws_access_key = st.text_input("AWS Access Key ID", type="password")
-    #aws_secret_key = st.text_input("AWS Secret Access Key", type="password")
-    
     
     if st.button("🗑️ 清空历史对话", use_container_width=True):
         st.session_state.messages = []
@@ -97,7 +94,6 @@ if prompt_input:
                     region_name='us-east-2',
                     aws_access_key_id=st.secrets["AWS_ACCESS_KEY_ID"],
                     aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"]
-                    #aws_region = st.text_input("AWS Region", value="us-east-1")
                 )
                 
                 # 构造 Bedrock Converse API 所需的 messages 格式
@@ -131,10 +127,23 @@ if prompt_input:
                 # 封装单次请求消息
                 messages_payload = [{"role": "user", "content": bedrock_contents}]
                 
-                # 调用 Bedrock 流式对话 API
+                # ==================== ✨ 新增：动态注入当前系统时间 ====================
+                now = datetime.datetime.now()
+                weekdays = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]
+                current_time_string = f"当前准确的系统时间是：{now.strftime('%Y年%m月%d日')}，{weekdays[now.weekday()]}。"
+                
+                system_prompts = [
+                    {
+                        "text": f"你是一个部署在企业生产环境中的 AI 助手。请务必基于以下给出的时间事实，来准确回答用户关于今天、明天、日期或星期几的询问。{current_time_string}"
+                    }
+                ]
+                # ====================================================================
+                
+                # 调用 Bedrock 流式对话 API (增加了 system 参数)
                 response = bedrock_client.converse_stream(
                     modelId=bedrock_model_id,
-                    messages=messages_payload
+                    messages=messages_payload,
+                    system=system_prompts  # <-- ✨ 核心修复：把时间传入系统级提示词
                 )
                 
                 # 解析流式数据块
