@@ -26,8 +26,8 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("☁️ AWS Bedrock 多模态对话系统")
-st.caption("前端采用 Streamlit，后端通过 boto3 直接调用 AWS Bedrock 基座模型并具备强健的流式容错解析。")
+st.title("☁️ LLM Test Lab on AWS Bedrock - Chris")
+#st.caption("前端采用 Streamlit，后端通过 boto3 直接调用 AWS Bedrock 基座模型并具备强健的流式容错解析。")
 
 
 # =========================
@@ -178,7 +178,7 @@ def build_current_user_content_and_memory(user_text, uploaded_files_data):
 
             bedrock_contents.append({
                 "text": (
-                    f"以下是用户上传的文本文件《{file_name}》的内容：\n\n"
+                    f"Here is the content of the file the user uploaded 《{file_name}》: \n\n"
                     f"{text_content}"
                 )
             })
@@ -187,10 +187,10 @@ def build_current_user_content_and_memory(user_text, uploaded_files_data):
             memory_text_content = text_content[:MAX_TEXT_FILE_CHARS_FOR_MEMORY]
 
             if len(text_content) > MAX_TEXT_FILE_CHARS_FOR_MEMORY:
-                memory_text_content += "\n\n[注意：该 TXT 文件内容过长，memory 中只保留了前一部分。]"
+                memory_text_content += "\n\n[Note: This TXT file is too long, memory will keep the first part of it.]"
 
             memory_parts.append(
-                f"用户上传了文本文件《{file_name}》，内容如下：\n\n"
+                f"The user uploaded a text file 《{file_name}》, content as follows:\n\n"
                 f"{memory_text_content}"
             )
 
@@ -198,13 +198,13 @@ def build_current_user_content_and_memory(user_text, uploaded_files_data):
         else:
             bedrock_contents.append({
                 "text": (
-                    f"用户上传了文件《{file_name}》，"
-                    f"但当前系统暂不支持解析该文件类型：{file_type}"
+                    f"The user uploaded the file《{file_name}》,"
+                    f"However the system doesn't support this file type: {file_type}"
                 )
             })
 
             memory_parts.append(
-                f"用户上传了文件《{file_name}》，但当前系统暂不支持解析该文件类型：{file_type}。"
+                f"The user uploade the file《{file_name}》, however the system doesn't support this file type: {file_type}."
             )
 
     # 最后加入用户文字 prompt
@@ -215,7 +215,7 @@ def build_current_user_content_and_memory(user_text, uploaded_files_data):
 
     if not bedrock_contents:
         bedrock_contents.append({
-            "text": "用户没有提供有效的文本或文件内容。"
+            "text": "The user didn't provide valid text or file."
         })
 
     model_memory_text = "\n\n".join(memory_parts).strip()
@@ -228,7 +228,7 @@ def build_current_user_content_and_memory(user_text, uploaded_files_data):
 # =========================
 
 with st.sidebar:
-    st.header("⚙️ AWS Bedrock 配置")
+    st.header("⚙️ AWS Bedrock")
 
     model_mapping = {
         "Google Gemma-3": "google.gemma-3-12b-it",
@@ -240,11 +240,11 @@ with st.sidebar:
         "Claude Sonnet 4.6": "us.anthropic.claude-sonnet-4-6",
 
         # 你的 AWS Account 当前可能还没有 Opus 4.7 权限
-        "Claude Opus 4.7（需 AWS 账号开通）": "us.anthropic.claude-opus-4-7",
+        #"Claude Opus 4.7（需 AWS 账号开通）": "us.anthropic.claude-opus-4-7",
     }
 
     selected_model_label = st.selectbox(
-        "选择 Bedrock 模型",
+        "Select Bedrock LLM model",
         list(model_mapping.keys())
     )
 
@@ -252,7 +252,7 @@ with st.sidebar:
 
     st.divider()
 
-    if st.button("🗑️ 清空历史对话", use_container_width=True):
+    if st.button("🗑️ Clear history", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
 
@@ -271,7 +271,7 @@ for message in st.session_state.messages:
                 if file["type"].startswith("image/"):
                     st.image(file["bytes"], caption=file["name"], width=300)
                 else:
-                    st.caption(f"📄 已上传文档: {file['name']}")
+                    st.caption(f"📄 File uploaded: {file['name']}")
 
 
 # =========================
@@ -279,9 +279,9 @@ for message in st.session_state.messages:
 # =========================
 
 prompt_input = st.chat_input(
-    placeholder="向 Bedrock 发送消息，或在此上传图片/文档...",
+    placeholder="Send messages to Bedrock, or upload files/pictures here...",
     accept_file="multiple",
-    file_type=["png", "jpg", "jpeg", "pdf", "txt"]
+    file_type=["png", "jpg", "jpeg", "pdf", "txt", "log", "docx"]
 )
 
 
@@ -315,7 +315,7 @@ if prompt_input:
                 if file["type"].startswith("image/"):
                     st.image(file["bytes"], caption=file["name"], width=300)
                 else:
-                    st.caption(f"📄 已上传文档: {file['name']}")
+                    st.caption(f"📄 File uploaded: {file['name']}")
 
         # 调用 Bedrock
         with st.chat_message("assistant"):
@@ -325,8 +325,8 @@ if prompt_input:
 
             full_response = ""
 
-            status_placeholder.caption(f"正在通过 Bedrock ({selected_model_label}) 生成回复...")
-            model_id_placeholder.caption(f"当前实际调用的 modelId: `{bedrock_model_id}`")
+            status_placeholder.caption(f"Generating replies through Bedrock ({selected_model_label}) ...")
+            model_id_placeholder.caption(f"The current model ID: `{bedrock_model_id}`")
 
             try:
                 # 初始化 Bedrock Runtime 客户端
