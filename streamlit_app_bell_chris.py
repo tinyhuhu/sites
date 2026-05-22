@@ -22,9 +22,9 @@ with st.sidebar:
         "Google Gemma-3": "google.gemma-3-12b-it",
         "GPT OSS Safeguard": "openai.gpt-oss-safeguard-120b",
         "Deepseek 3.2": "deepseek.v3.2",
-        "Claude Haiku 4.5": "anthropic.claude-haiku-4-5-20251001-v1:0",
-        "Claude Sonnet 4.6": "anthropic.claude-sonnet-4-6",
-        "Claude Opus 4.7": "anthropic.claude-opus-4-7"
+        "Claude Haiku 4.5": "us.anthropic.claude-haiku-4-5-v1:0",
+        "Claude Sonnet 4.6": "us.anthropic.claude-sonnet-4-6-v1:0",
+        "Claude Opus 4.7": "us.anthropic.claude-opus-4-7-v1:0"
     }
     
     selected_model_label = st.selectbox("选择 Bedrock 模型", list(model_mapping.keys()))
