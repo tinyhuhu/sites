@@ -201,8 +201,8 @@ def create_map(location: dict, selected_engine: str) -> folium.Map:
     pin_html = """
     <div style="
         position: relative;
-        width: 34px;
-        height: 48px;
+        width: 28px;
+        height: 54px;
     ">
         <div style="
             position: absolute;
@@ -210,18 +210,18 @@ def create_map(location: dict, selected_engine: str) -> folium.Map:
             top: 0;
             width: 22px;
             height: 34px;
-            background: #ff0000;
+            background: #e53935;
             border: 3px solid white;
             border-radius: 50% 50% 50% 0;
             transform: rotate(-45deg);
             box-shadow: 0 3px 8px rgba(0,0,0,0.35);
         ">
             <div style="
-                width: 10px;
-                height: 10px;
+                width: 8px;
+                height: 8px;
                 background: white;
                 border-radius: 50%;
-                margin: 9px;
+                margin: 10px 0 0 7px;
             "></div>
         </div>
     </div>
@@ -233,9 +233,9 @@ def create_map(location: dict, selected_engine: str) -> folium.Map:
         tooltip=location["address"],
         icon=folium.DivIcon(
             html=pin_html,
-            icon_size=(34, 48),
-            icon_anchor=(17, 38),
-            popup_anchor=(0, -38),
+            icon_size=(28, 54),
+            icon_anchor=(14, 46),
+            popup_anchor=(0, -46),
         ),
     ).add_to(m)
 
