@@ -209,7 +209,7 @@ def create_map(location: dict, selected_engine: str) -> folium.Map:
             left: 3px;
             top: 0;
             width: 28px;
-            height: 28px;
+            height: 38px;
             background: #ff0000;
             border: 3px solid white;
             border-radius: 50% 50% 50% 0;
