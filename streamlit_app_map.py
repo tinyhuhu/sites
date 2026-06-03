@@ -200,30 +200,22 @@ def create_map(location: dict, selected_engine: str) -> folium.Map:
     # 自定义水滴状 marker，不依赖 Leaflet 默认 marker 图片
     pin_html = """
     <div style="
-        position: relative;
-        width: 28px;
-        height: 54px;
+        width: 32px;
+        height: 52px;
     ">
-        <div style="
-            position: absolute;
-            left: 4px;
-            top: 0;
-            width: 22px;
-            height: 34px;
-            background: #e53935;
-            border: 3px solid white;
-            border-radius: 50% 50% 50% 0;
-            transform: rotate(-45deg);
-            box-shadow: 0 3px 8px rgba(0,0,0,0.35);
-        ">
-            <div style="
-                width: 8px;
-                height: 8px;
-                background: white;
-                border-radius: 50%;
-                margin: 10px 0 0 7px;
-            "></div>
-        </div>
+        <svg width="32" height="52" viewBox="0 0 32 52" xmlns="http://www.w3.org/2000/svg">
+            <path
+                d="M16 1
+                C7.7 1 1 7.7 1 16
+                C1 27.5 16 51 16 51
+                C16 51 31 27.5 31 16
+                C31 7.7 24.3 1 16 1Z"
+                fill="#e53935"
+                stroke="white"
+                stroke-width="3"
+            />
+            <circle cx="16" cy="16" r="6" fill="white" />
+        </svg>
     </div>
     """
 
@@ -233,9 +225,9 @@ def create_map(location: dict, selected_engine: str) -> folium.Map:
         tooltip=location["address"],
         icon=folium.DivIcon(
             html=pin_html,
-            icon_size=(28, 54),
-            icon_anchor=(14, 46),
-            popup_anchor=(0, -46),
+            icon_size=(32, 52),
+            icon_anchor=(16, 51),
+            popup_anchor=(0, -48),
         ),
     ).add_to(m)
 
