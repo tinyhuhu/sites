@@ -19,7 +19,7 @@ MAP_ENGINES = {
     "Google Hybrid": "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
 }
 
-DEFAULT_CITY_SUFFIX = "Calgary, AB, Canada"
+#DEFAULT_CITY_SUFFIX = "Calgary, AB, Canada"
 
 
 def get_google_maps_api_key() -> str | None:
