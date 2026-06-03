@@ -45,20 +45,15 @@ def get_google_maps_api_key() -> str | None:
 
 def build_query(user_input: str) -> str:
     """
-    如果用户没有输入城市/省/国家信息，则默认补 Calgary, AB, Canada。
-    这样搜索中文商户名时，也会优先限制在 Calgary 附近。
+    默认不再强制补 Calgary。
+    用户输入什么，就直接交给 Google Maps 搜索。
+    如果用户想搜 Calgary 本地，可以自己输入 Calgary，或者后面再加一个 checkbox 控制。
     """
     clean_input = (user_input or "").strip()
     if not clean_input:
         return DEFAULT_CITY_SUFFIX
 
-    lower_input = clean_input.lower()
-    location_hints = ["calgary", "alberta", " ab", "canada"]
-
-    if any(hint in lower_input for hint in location_hints):
-        return clean_input
-
-    return f"{clean_input}, {DEFAULT_CITY_SUFFIX}"
+    return clean_input
 
 
 def geocode_with_google(query: str, api_key: str) -> dict | None:
@@ -70,9 +65,7 @@ def geocode_with_google(query: str, api_key: str) -> dict | None:
     params = {
         "address": query,
         "key": api_key,
-        "region": "ca",
         "language": "en",
-        "components": "country:CA",
     }
 
     response = requests.get(endpoint, params=params, timeout=10)
