@@ -180,7 +180,6 @@ def geocode_with_google(query: str, api_key: str, local_search: bool = True) -> 
 def create_map(location: dict, selected_engine: str) -> folium.Map:
     tiles_value = MAP_ENGINES[selected_engine]
 
-    # Folium 使用自定义 Google tile 时需要 attr
     if selected_engine.startswith("Google"):
         attr = "Google"
     else:
@@ -188,7 +187,7 @@ def create_map(location: dict, selected_engine: str) -> folium.Map:
 
     m = folium.Map(
         location=[location["latitude"], location["longitude"]],
-        zoom_start=15,
+        zoom_start=16,
         tiles=tiles_value,
         attr=attr,
     )
@@ -198,10 +197,46 @@ def create_map(location: dict, selected_engine: str) -> folium.Map:
     <a href="{location["google_maps_url"]}" target="_blank">Open in Google Maps</a>
     """
 
+    # 自定义水滴状 marker，不依赖 Leaflet 默认 marker 图片
+    pin_html = """
+    <div style="
+        position: relative;
+        width: 34px;
+        height: 48px;
+    ">
+        <div style="
+            position: absolute;
+            left: 3px;
+            top: 0;
+            width: 28px;
+            height: 28px;
+            background: #e53935;
+            border: 3px solid white;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.35);
+        ">
+            <div style="
+                width: 10px;
+                height: 10px;
+                background: white;
+                border-radius: 50%;
+                margin: 9px;
+            "></div>
+        </div>
+    </div>
+    """
+
     folium.Marker(
-        [location["latitude"], location["longitude"]],
+        location=[location["latitude"], location["longitude"]],
         popup=folium.Popup(popup_html, max_width=320),
         tooltip=location["address"],
+        icon=folium.DivIcon(
+            html=pin_html,
+            icon_size=(34, 48),
+            icon_anchor=(17, 38),
+            popup_anchor=(0, -38),
+        ),
     ).add_to(m)
 
     return m
