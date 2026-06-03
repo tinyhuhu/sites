@@ -210,7 +210,7 @@ def create_map(location: dict, selected_engine: str) -> folium.Map:
                 C1 27.5 16 51 16 51
                 C16 51 31 27.5 31 16
                 C31 7.7 24.3 1 16 1Z"
-                fill="#e53935"
+                fill="#ff0000"
                 stroke="white"
                 stroke-width="3"
             />
